@@ -1,0 +1,24 @@
+{
+  "name": "smartcrm-l2-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Smart CRM – Luồng L2: Tiếp nhận và phân loại yêu cầu bảo hành (backend 4 lớp)",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node --env-file=../../.env src/server.js",
+    "dev": "node --env-file=../../.env --watch src/server.js",
+    "migrate": "node --env-file=../../.env scripts/migrate.js",
+    "token": "node --env-file=../../.env scripts/make-token.js",
+    "demo": "node --env-file=../../.env scripts/demo.js",
+    "nfr2": "node --env-file=../../.env scripts/nfr2-concurrency.js",
+    "test": "node --test ../../tests/backend/slaPolicy.test.js ../../tests/backend/warrantyPolicy.test.js ../../tests/backend/phonePolicy.test.js ../../tests/backend/ticketService.test.js ../../tests/backend/validator.test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}
