@@ -68,6 +68,12 @@ nội dung thiết kế (SRS, Use Case, kiến trúc, ERD, wireframe); các góp
 - **Lý do:** Service nhận repository qua hàm khởi tạo nên viết được unit test với repository giả cho đủ ba loại: luồng đúng, giá trị biên, dữ liệu sai; `npm test` chạy được ngay sau khi clone, không cần `npm install` hay PostgreSQL.
 - **Ảnh hưởng:** `src/backend/src/container.js` (nơi duy nhất nối service với repository thật); `ticketService`, `customerService`, `categoryService` đổi sang dạng `createXxxService({...})`; thêm `tests/backend/ticketService.test.js` (TC-01…TC-16) và `validator.test.js` (TC-17…TC-20). Phép thử ranh giới lớp: `grep -rn "req\.\|res\.\|SELECT" src/backend/src/business/` phải rỗng.
 
+### TD-11 Chạy PostgreSQL 16 bằng Docker trên máy phát triển
+- **Phản hồi của GV:** (phát sinh khi chạy Sprint 1 trên máy cá nhân – máy chưa cài PostgreSQL)
+- **Quyết định:** BỔ SUNG cách chạy CSDL bằng container `postgres:16` (Docker Desktop), giữ nguyên PostgreSQL 16 và DDL của BT1
+- **Lý do:** Một lệnh `docker run` tạo sẵn database `smartcrm`, cùng phiên bản PostgreSQL 16 như thiết kế, không phải cài đặt và cấu hình dịch vụ trên Windows; xóa container là làm sạch dữ liệu, thuận tiện chạy lại migrate và NFR2. Ứng dụng chỉ đọc `DATABASE_URL` nên không phải sửa mã (NFR6).
+- **Ảnh hưởng:** README mục 2 và mục 3 (thêm Cách A – Docker); `.env` dùng `postgres://postgres:123456@localhost:5432/smartcrm` trên máy phát triển. Không đổi mã nguồn, migration hay kiến trúc 4 lớp.
+
 ## Trước Bài tập 1 – thay đổi so với bài Buổi 2 và Buổi 4
 
 | Nội dung | Bản trước | Bản BT1 và lý do |

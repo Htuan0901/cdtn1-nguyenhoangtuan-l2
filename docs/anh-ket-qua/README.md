@@ -1,11 +1,13 @@
 # Ảnh kết quả chạy – Buổi 8
 
-Lưu ảnh chụp màn hình vào thư mục này (checklist Buổi 8: "Đã chụp ảnh kết quả chạy, lưu vào docs/").
+Ảnh chụp trên máy Windows (Git Bash), PostgreSQL 16 chạy bằng Docker (TD-11).
 
-| Tên ảnh | Chụp gì |
+| Tên ảnh | Nội dung |
 |---|---|
-| `01-migrate.png` | Kết quả `npm run migrate`: đã chạy 001, 002 và danh sách 6 bảng |
-| `02-test.png` | Kết quả `npm test`: 15 test, pass 15, fail 0 |
-| `03-demo-tao-phieu.png` | `npm run demo` – phần 3, 4: tạo phiếu HTTP 201 (còn bảo hành / chờ xác minh) |
-| `04-demo-loi.png` | `npm run demo` – phần 2, 5, 7, 8, 10, 11: các mã 400 / 403 / 409 / 401 |
-| `05-nfr2.png` | Kết quả `npm run nfr2`: 0 mã trùng, p95 |
+| `01-migrate.png` | `npm run migrate` chạy 2 lần: lần 1 tạo 6 bảng, lần 2 bỏ qua |
+| `02-test.png` | `npm test`: tests 35, pass 35, fail 0 |
+| `03-demo-tao-phieu.png` | `npm run demo` tình huống 5–6: 400 thiếu mô tả lỗi; danh sách phiếu (phiếu mới tạo đứng đầu) |
+| `04-demo-loi.png` | `npm run demo` tình huống 7–9: 403 khác trung tâm, 400 thiếu ghi chú, 200 quản lý chấp nhận |
+| `04b-demo-loi.png` | `npm run demo` tình huống 10–11: 409 xét duyệt lần hai, 401 thiếu JWT |
+| `05-nfr2.png` | `npm run nfr2`: 1.000 yêu cầu, 0 lỗi, 0 mã trùng, p95 = 369 ms → ĐẠT NFR2 |
+| `06-git-log.png` | `git log --oneline -7` và `git push` |

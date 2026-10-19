@@ -2,7 +2,7 @@
 
 **Sinh viên:** Nguyễn Hoàng Tuấn – MSSV: 2374802010542
 
-**Track:** SE (Công nghệ phần mềm) · **Lớp:** 71K29CNTT06 (nhóm HP 03)
+**Track:** SE (Công nghệ phần mềm) · **Lớp:** 03
 
 **Học phần:** Chuyên đề Tốt nghiệp 1 – Trường ĐH Văn Lang · Case study: Smart CRM – Mekong Mobile
 
@@ -14,14 +14,19 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 
 ## 2. Yêu cầu môi trường
 - **Node.js 20 LTS** (≥ 20.6, dùng `node --env-file`) và npm 10
-- **PostgreSQL 16** (cổng 5432), đã tạo database `smartcrm`
+- **PostgreSQL 16** (cổng 5432), đã tạo database `smartcrm` – cài trực tiếp **hoặc** chạy bằng Docker Desktop (cách đã dùng khi chạy buổi 8, xem mục 3 và TD-11)
 - Biến môi trường: sao chép `.env.example` thành `.env` ở thư mục gốc repo rồi điền `DATABASE_URL`, `PORT`, `JWT_SECRET` (không commit `.env`)
 - Thư viện backend: `express` 4, `pg` 8, `jsonwebtoken` 9 (cài bằng `npm install`)
 - Kiểm thử: `node:test` có sẵn trong Node.js; `npm test` chạy được ngay sau khi clone (repository giả, không cần CSDL)
 
 ## 3. Cài đặt và chạy
 ```bash
-# 1. Tạo database (một lần)
+# 1. Tạo database (một lần) – chọn MỘT trong hai cách
+# Cách A – Docker Desktop (không cần cài PostgreSQL):
+docker run -d --name smartcrm-pg -e POSTGRES_PASSWORD=123456 -e POSTGRES_DB=smartcrm -p 5432:5432 postgres:16
+#   lần sau chỉ cần: docker start smartcrm-pg
+#   .env: DATABASE_URL=postgres://postgres:123456@localhost:5432/smartcrm
+# Cách B – PostgreSQL cài trực tiếp:
 psql -U postgres -c "CREATE DATABASE smartcrm;"
 
 # 2. Cấu hình
@@ -80,7 +85,7 @@ curl -s -X POST localhost:3000/api/tickets -H "Authorization: Bearer <JWT>" -H "
 | `POST /api/tickets/{ticketCode}/review` | UC07 | chỉ Quản lý; 400 thiếu ghi chú, 409 đã xét duyệt, 403 khác trung tâm |
 
 ## 6. Trạng thái hiện tại (buổi 8 – Sprint 1)
-- [x] Ghi quyết định điều chỉnh thiết kế sau phản hồi BT1 (`docs/thay-doi-thiet-ke.md`, TD-01…TD-10)
+- [x] Ghi quyết định điều chỉnh thiết kế sau phản hồi BT1 (`docs/thay-doi-thiet-ke.md`, TD-01…TD-11)
 - [x] Khung `src/` ánh xạ 1–1 với sơ đồ kiến trúc (mục 4)
 - [x] Migration 001 tạo 6 bảng theo đúng DDL BT1; migration 002 nạp danh mục nhóm sự cố, 3 nhân viên (TT-CT01, TT-CT02 theo bộ mẫu), 3 khách hàng, 3 thiết bị, 2 phiếu mẫu
 - [x] Module cốt lõi **Phiếu bảo hành** chạy qua đủ 3 lớp routes/controllers → services → repositories (Tạo, Đọc danh sách, Đọc chi tiết, Cập nhật trạng thái qua xét duyệt; không có xóa – TD-07)
