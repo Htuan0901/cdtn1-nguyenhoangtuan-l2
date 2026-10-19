@@ -11,6 +11,7 @@ Thiết kế REST API cho lớp ② (API – Express) trong `architecture.drawio
 | Base URL | `/api` |
 | Định dạng | JSON, UTF-8; thời gian theo ISO 8601 có múi giờ `+07:00` |
 | Xác thực | Header `Authorization: Bearer <JWT>`; JWT chứa `staffId`, `role` (`NV_TIEP_NHAN` / `QL_TRUNG_TAM`), `centerCode` |
+| Mã phiếu trong URL | Mã phiếu có dấu “/” nên gửi dạng mã hoá: `/api/tickets/BH-000001%2F2026` (`encodeURIComponent`) |
 | Phân quyền | Chỉ truy cập dữ liệu của `centerCode` trong JWT (QT-14) |
 | Che số điện thoại | Vai trò `NV_TIEP_NHAN` nhận `phone` dạng `090****567`; `QL_TRUNG_TAM` nhận đầy đủ (QT-15, NFR4) |
 
@@ -33,16 +34,18 @@ Thiết kế REST API cho lớp ② (API – Express) trong `architecture.drawio
 
 ## 2. Danh sách endpoint
 
+Trạng thái hiện thực (buổi 8): ✅ đã chạy được · ⏳ làm ở các buổi sau.
+
 | # | Method | Endpoint | Mục đích | FR | US | UC |
 |---|---|---|---|---|---|---|
-| E1 | POST | `/api/customers/lookup` | Tra cứu khách hàng theo số điện thoại | FR1 | US1 | UC01 |
-| E2 | POST | `/api/customers` | Tạo hồ sơ khách hàng mới | FR2 | US2 | UC02 |
-| E3 | POST | `/api/devices` | Ghi nhận / tra cứu thiết bị theo Serial/IMEI | FR3 | US3 | UC03 |
-| E4 | GET | `/api/issue-categories` | Danh mục nhóm sự cố đang hoạt động + mức ưu tiên mặc định | FR6 | US5 | UC05 |
-| E5 | POST | `/api/tickets` | Tạo phiếu bảo hành (kiểm tra bảo hành, sinh hạn cam kết) | FR4, FR5, FR6 | US4, US5 | UC04 |
-| E6 | GET | `/api/tickets` | Danh sách phiếu bảo hành có lọc, phân trang | FR8 | US7 | UC06 |
-| E7 | GET | `/api/tickets/{ticketCode}` | Chi tiết phiếu + lịch sử trạng thái | FR8 | US7 | UC08 |
-| E8 | POST | `/api/tickets/{ticketCode}/review` | Xét duyệt phiếu chờ xác minh bảo hành | FR7 | US6 | UC07 |
+| E1 ✅ | POST | `/api/customers/lookup` | Tra cứu khách hàng theo số điện thoại | FR1 | US1 | UC01 |
+| E2 ⏳ | POST | `/api/customers` | Tạo hồ sơ khách hàng mới | FR2 | US2 | UC02 |
+| E3 ⏳ | POST | `/api/devices` | Ghi nhận / tra cứu thiết bị theo Serial/IMEI | FR3 | US3 | UC03 |
+| E4 ✅ | GET | `/api/issue-categories` | Danh mục nhóm sự cố đang hoạt động + mức ưu tiên mặc định | FR6 | US5 | UC05 |
+| E5 ✅ | POST | `/api/tickets` | Tạo phiếu bảo hành (kiểm tra bảo hành, sinh hạn cam kết) | FR4, FR5, FR6 | US4, US5 | UC04 |
+| E6 ✅ | GET | `/api/tickets` | Danh sách phiếu bảo hành có lọc, phân trang | FR8 | US7 | UC06 |
+| E7 ✅ | GET | `/api/tickets/{ticketCode}` | Chi tiết phiếu + lịch sử trạng thái | FR8 | US7 | UC08 |
+| E8 ✅ | POST | `/api/tickets/{ticketCode}/review` | Xét duyệt phiếu chờ xác minh bảo hành | FR7 | US6 | UC07 |
 
 ## 3. Chi tiết endpoint (story MUST)
 
@@ -120,7 +123,7 @@ Response 200:
 ```
 Không có kết quả → 200 với `"items": []` (UC07 bước 2a).
 
-E2, E3, E4, E7 theo cùng quy ước; chi tiết sẽ hoàn thiện ở Bài tập 2.
+E2, E3 theo cùng quy ước, hiện thực ở các buổi sau. E4, E7 đã chạy – xem `src/backend/scripts/demo.js`.
 
 ## 4. Quy tắc validation
 
@@ -135,7 +138,7 @@ E2, E3, E4, E7 theo cùng quy ước; chi tiết sẽ hoàn thiện ở Bài t�
 | `customerId`, `deviceId` | Có (E5) | Integer dương | Phải tồn tại; thiết bị thuộc khách hàng đã gửi |
 | `issueDesc` | Có (E5) | String 1–5.000 | Không rỗng sau khi trim |
 | `categoryCode` | Có (E5) | Enum | `MAN_HINH`, `PIN`, `SAC`, `PHAN_MEM`, `NUOC_VAO`, `KHAC`; phải đang hoạt động |
-| `priority` | Có (E5) | Enum | `CAO`, `TRUNG_BINH`, `THAP` |
+| `priority` | Không (E5) | Enum | `CAO`, `TRUNG_BINH`, `THAP`; bỏ trống → mức mặc định của nhóm sự cố (QT-A1) |
 | `decision` | Có (E8) | Enum | `CHAP_NHAN`, `KHONG_CHAP_NHAN` |
 | `note` | Có (E8) | String 1–500 | Không rỗng (QT-A3) |
 
