@@ -1,0 +1,6 @@
+{
+  "_ghiChu": "QT-04: số giờ cam kết theo mức ưu tiên, chỉ tính ngày làm việc. Đổi ngưỡng chỉ sửa tệp này (NFR6).",
+  "hoursByPriority": { "CAO": 24, "TRUNG_BINH": 72, "THAP": 120 },
+  "workingDays": [1, 2, 3, 4, 5, 6],
+  "utcOffsetMinutes": 420
+}
