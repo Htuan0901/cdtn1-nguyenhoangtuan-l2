@@ -1,8 +1,8 @@
 # SRS rút gọn – Smart CRM · Luồng L2: Tiếp nhận và phân loại yêu cầu bảo hành
 
-Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 – Track SE · Học phần Chuyên đề tốt nghiệp 1 – Bài tập 1
+Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 – Track SE · Chuyên đề tốt nghiệp 1 – Bài tập 1 (cập nhật 17/10/2026 sau phản hồi)
 
-> Nguồn markdown của Mục 1 (SRS) và Mục 2 (Use Case) trong file PDF nộp. Sơ đồ gốc: `usecase.drawio`, `architecture.drawio`, `erd.drawio`, `wireframe.drawio`.
+> Nguồn markdown của Mục 1 (SRS) và Mục 2 (Use Case) trong file PDF. Bản này đầy đủ hơn PDF: có đủ 9 tiêu chí chấp nhận GWT và bảng danh sách use case.
 
 # MỤC 1 – BẢN SRS RÚT GỌN
 
@@ -45,7 +45,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 – Track SE · Học 
 | Trạng thái phiếu | Trong L2 chỉ có: “Mới” và “Chờ xác minh bảo hành”. | ticket.status (MOI, CHO_XAC_MINH) |
 | Xét duyệt | Quyết định Chấp nhận / Không chấp nhận bảo hành của Quản lý trung tâm bảo hành cho phiếu “Chờ xác minh bảo hành”. | ticket.warranty_result + ticket_status_log.note |
 | Lịch sử trạng thái phiếu | Bản ghi mỗi lần đổi trạng thái: người thực hiện, thời điểm, từ → sang, ghi chú. | ticket_status_log |
-| Trung tâm | Trung tâm bảo hành nơi tiếp nhận; nhận diện bằng mã trung tâm (ví dụ TT-Q1). | center_code |
+| Trung tâm | Trung tâm bảo hành nơi tiếp nhận; nhận diện bằng mã trung tâm (ví dụ TT-CT01). | center_code |
 | Nhân viên tiếp nhận; Quản lý trung tâm bảo hành | Hai vai trò người dùng của luồng L2 (mục 1.2). | staff.role (NV_TIEP_NHAN, QL_TRUNG_TAM) |
 
 
@@ -55,8 +55,8 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 – Track SE · Học 
 |---|---|---|
 | **Nhân viên tiếp nhận** (actor chính) | Tra cứu khách hàng; tạo hồ sơ khách hàng mới; ghi nhận thiết bị; tạo phiếu bảo hành; phân loại sự cố và mức ưu tiên; xem danh sách và chi tiết phiếu của trung tâm mình. Số điện thoại hiển thị dạng che. | Xét duyệt phiếu “Chờ xác minh bảo hành”; xem phiếu của trung tâm khác; xóa phiếu; phân công kỹ thuật viên. |
 | **Quản lý trung tâm bảo hành** | Xem danh sách và chi tiết phiếu của trung tâm mình (thấy số điện thoại đầy đủ); xét duyệt phiếu “Chờ xác minh bảo hành” kèm ghi chú. | Xét duyệt phiếu của trung tâm khác; ghi đè quyết định xét duyệt đã lưu; sửa mô tả lỗi, thiết bị trên phiếu; xóa phiếu. |
-| Khách hàng (không dùng hệ thống) | Cung cấp số điện thoại, thiết bị, mô tả lỗi, chứng từ mua hàng; nhận mã phiếu và hạn cam kết. | Không đăng nhập, không thao tác trực tiếp. |
-| Kỹ thuật viên (luồng sau) | Nhận phiếu ở trạng thái “Mới” trong luồng L4. | Ngoài phạm vi L2. |
+
+Bên liên quan không dùng hệ thống: **Khách hàng** (cung cấp số điện thoại, thiết bị, mô tả lỗi, chứng từ; nhận mã phiếu và hạn cam kết) và **Kỹ thuật viên** (nhận phiếu “Mới” ở luồng L4 – ngoài phạm vi).
 
 
 ## 1.3. Yêu cầu chức năng và User Story
