@@ -34,13 +34,14 @@ Thiết kế REST API cho lớp ② (API – Express) trong `architecture.drawio
 
 ## 2. Danh sách endpoint
 
-Trạng thái hiện thực (buổi 8): ✅ đã chạy được · ⏳ làm ở các buổi sau.
+Trạng thái hiện thực (buổi 10): ✅ đã chạy được và được giao diện M1–M3 gọi tới.
 
 | # | Method | Endpoint | Mục đích | FR | US | UC |
 |---|---|---|---|---|---|---|
+| E0 ✅ | POST | `/api/auth/login` | Đăng nhập nhân viên, nhận JWT (không cần JWT) | NFR4 | — | — |
 | E1 ✅ | POST | `/api/customers/lookup` | Tra cứu khách hàng theo số điện thoại | FR1 | US1 | UC01 |
-| E2 ⏳ | POST | `/api/customers` | Tạo hồ sơ khách hàng mới | FR2 | US2 | UC02 |
-| E3 ⏳ | POST | `/api/devices` | Ghi nhận / tra cứu thiết bị theo Serial/IMEI | FR3 | US3 | UC03 |
+| E2 ✅ | POST | `/api/customers` | Tạo hồ sơ khách hàng mới | FR2 | US2 | UC02 |
+| E3 ✅ | POST | `/api/devices` | Ghi nhận / tra cứu thiết bị theo Serial/IMEI | FR3 | US3 | UC03 |
 | E4 ✅ | GET | `/api/issue-categories` | Danh mục nhóm sự cố đang hoạt động + mức ưu tiên mặc định | FR6 | US5 | UC05 |
 | E5 ✅ | POST | `/api/tickets` | Tạo phiếu bảo hành (kiểm tra bảo hành, sinh hạn cam kết) | FR4, FR5, FR6 | US4, US5 | UC04 |
 | E6 ✅ | GET | `/api/tickets` | Danh sách phiếu bảo hành có lọc, phân trang | FR8 | US7 | UC06 |
@@ -123,7 +124,26 @@ Response 200:
 ```
 Không có kết quả → 200 với `"items": []` (UC07 bước 2a).
 
-E2, E3 theo cùng quy ước, hiện thực ở các buổi sau. E4, E7 đã chạy – xem `src/backend/scripts/demo.js`.
+### E0. POST /api/auth/login (buổi 10 – TD-12)
+Request: `{ "username": "nv01", "password": "…" }` → 200:
+```json
+{ "token": "<JWT 8 giờ>", "staff": { "staffId": 1, "role": "NV_TIEP_NHAN", "centerCode": "TT-CT01", "fullName": "Trần Thị Bình", "username": "nv01" } }
+```
+- 400 `VALIDATION_ERROR` thiếu trường · 401 `INVALID_CREDENTIALS` (cùng thông báo cho sai tên và sai mật khẩu) · 403 tài khoản bị khoá.
+
+### E1 (bổ sung buổi 10). Response có thêm `devices`
+`{ "customerId": 1, "fullName": "…", "phone": "090****567", "devices": [ { "deviceId": 1, "serialImei": "MM-IMEI-000123", "modelName": "Mekong X5", "purchaseDate": "2026-03-15", "warrantyMonths": 12 } ] }`
+
+### E2. POST /api/customers (chỉ `NV_TIEP_NHAN`)
+Request: `{ "fullName": "Nguyễn Văn A", "phone": "0911 222 333" }` → 201 cùng dạng E1.
+- 400 `INVALID_PHONE` · 409 `PHONE_EXISTS` (đã có hồ sơ sau khi chuẩn hoá – QT-01).
+
+### E3. POST /api/devices (chỉ `NV_TIEP_NHAN`)
+- Chỉ gửi `{ customerId, serialImei }` → 200 thiết bị đã có của khách (`created: false`) hoặc 404 `DEVICE_NOT_FOUND`.
+- Gửi thêm `modelName`, `purchaseDate?`, `warrantyMonths?` → 201 ghi nhận mới (`created: true`); Serial/IMEI chuẩn hoá chữ hoa.
+- 409 `DEVICE_OWNED_BY_OTHER` – Serial/IMEI thuộc khách hàng khác (UC04 – 5a, QT-03) · 400 `PURCHASE_DATE_IN_FUTURE`.
+
+E4, E7 đã chạy – xem `src/backend/scripts/demo.js` và `scripts/e2e.js`.
 
 ## 4. Quy tắc validation
 

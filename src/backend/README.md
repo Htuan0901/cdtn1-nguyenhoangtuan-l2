@@ -6,10 +6,10 @@ Cách cài đặt, chạy và ánh xạ thư mục: xem `README.md` ở thư m�
 ```
 src/
 ├── app.js, server.js, config.js
-├── api/            ② routes, controllers, middlewares (auth, validator, errorHandler), presenters
-├── business/       ③ services (customer, category, ticket), policies (sla, warranty, phone), errors
+├── api/            ② routes, controllers (auth, customer, device, category, ticket), middlewares (auth, validator, cors, errorHandler), presenters
+├── business/       ③ services (auth, customer, device, category, ticket), policies (sla, warranty, phone, password), errors
 └── data-access/    ④ db.js (pg Pool, giao dịch), repositories/
 config/sla.config.json   QT-04 (đổi ngưỡng không sửa code – NFR6)
-db/migrations/           001 DDL BT1 · 002 dữ liệu mẫu
-scripts/                 migrate, make-token, demo, nfr2-concurrency
+db/migrations/           001 DDL BT1 · 002 dữ liệu mẫu · 003 mật khẩu nhân viên
+scripts/                 migrate, seed-mau (dữ liệu mẫu thật), e2e (luồng chính), make-token, demo, nfr2-concurrency
 ```

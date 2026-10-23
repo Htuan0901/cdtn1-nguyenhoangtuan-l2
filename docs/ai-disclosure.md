@@ -17,3 +17,12 @@ Họ tên: **Nguyễn Hoàng Tuấn**   –   MSSV: **2374802010542**   –   Ng
 | Claude (Anthropic) | Đọc phản hồi BT1, repo mẫu track SE và gợi ý quyết định SỬA/GIỮ cho từng điểm | docs/thay-doi-thiet-ke.md (TD-01…TD-10) | Đối chiếu từng TD với bảng phản hồi của giảng viên và tài liệu Buổi 8 |
 | Claude (Anthropic) | Gợi ý khung thư mục theo 4 lớp; viết mã routes/controllers/services/policies/repositories, migration, script demo, script NFR2 và unit test | src/backend/, src/frontend/ (khung), tests/backend/ | Chạy `npm test` (35/35 đạt), `npm run migrate` (6 bảng), `npm run demo` (11 lời gọi đúng mã HTTP như api-contract), `npm run nfr2`; đọc lại từng tệp để giải thích được luồng UC04, UC07 |
 | Claude (Anthropic) | Soạn báo cáo Buổi 8 | BaoCao_Buoi8_2374802010542_NguyenHoangTuan | Ảnh kết quả trong báo cáo do em tự chạy và chụp trên máy |
+
+## Sprint 2 – Buổi 10 (23/10/2026)
+
+| Công cụ | Dùng vào việc gì | Áp dụng ở phần nào | Đã kiểm chứng thế nào |
+|---|---|---|---|
+| Claude (Anthropic) | Đọc tài liệu Buổi 10 và wireframe M1–M3; gợi ý phạm vi module mở rộng và phần cắt | docs/thay-doi-thiet-ke.md (TD-12…TD-16) | Đối chiếu với 10 mục kiểm chứng của Buổi 10 và User Story BT1 |
+| Claude (Anthropic) | Viết mã đăng nhập, E2, E3, CORS, migration 003; giao diện M1–M3 + đăng nhập (client.js, *.api.js, DataState); script nạp dữ liệu mẫu và script e2e | src/backend/, src/frontend/, data/mau/ | Chạy lại toàn bộ từ thư mục clone mới theo README mục 3; thao tác tay 5 test case trên trình duyệt; tắt backend để xem trạng thái lỗi |
+| Claude (Anthropic) | Viết 5 unit test (TC-21…TC-25), 5 test repository (TR-01…TR-05), 5 test case thủ công và nhật ký thực thi | tests/, docs/test-cases.md, docs/test-execution.md | `npm test` 40/40, `npm run test:repo` 5/5; đọc lại từng test để giải thích được nó kiểm quy tắc nào |
+| Claude (Anthropic) | Soạn báo cáo Buổi 10 | BaoCao_Buoi10_2374802010542_NguyenHoangTuan | Đối chiếu số liệu trong báo cáo với đầu ra lệnh chạy |

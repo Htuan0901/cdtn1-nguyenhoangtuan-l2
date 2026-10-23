@@ -3,6 +3,41 @@
 > Ghi theo mẫu Buổi 8: mỗi thay đổi có mã TD-xx và đủ bốn dòng **phản hồi – quyết định – lý do – ảnh hưởng**.
 > File được nối tiếp khi nhận phản hồi BT2, BT3.
 
+## Sprint 2 – Buổi 10: module mở rộng và giao diện (ngày 23/10/2026)
+
+Nguồn: tài liệu Buổi 10 (module mở rộng [SE]: frontend ≥ 3 màn hình gọi API thật, DataState, đăng nhập;
+chạy end-to-end trên dữ liệu mẫu thật; “ghi nhận phần đã cắt và lý do trong mục điều chỉnh thiết kế”).
+
+### TD-12 Thêm đăng nhập thật thay cho JWT phát từ script
+- **Phản hồi của GV:** (tài liệu Buổi 10) [SE] “Đăng nhập; nhận 401 thì xoá token, về trang đăng nhập”.
+- **Quyết định:** SỬA TD-08 – thêm `POST /api/auth/login` (AuthService) và migration 003 thêm MỘT cột `staff.password_hash`.
+- **Lý do:** Giao diện cần đăng nhập để có JWT; mật khẩu băm bằng scrypt có sẵn trong Node.js (không thêm thư viện), so sánh thời gian hằng; sai tên hoặc sai mật khẩu trả cùng một thông báo để không lộ tài khoản nào tồn tại (NFR4). Vẫn 6 bảng như ERD BT1.
+- **Ảnh hưởng:** `db/migrations/003_mat_khau_nhan_vien.sql`, `business/policies/passwordPolicy.js`, `business/services/authService.js`, `api/controllers/authController.js`; `npm run token` vẫn giữ cho Postman/curl. Mật khẩu mẫu ghi ở README mục 3 – chỉ dùng trên máy phát triển.
+
+### TD-13 Giao diện viết bằng JavaScript ES modules, không dùng React
+- **Phản hồi của GV:** (quyết định kỹ thuật khi hiện thực Sprint 2) – README frontend buổi 8 ghi “React SPA”.
+- **Quyết định:** SỬA – 3 màn hình M1–M3 + trang đăng nhập viết bằng JavaScript ES modules chạy thẳng trên trình duyệt, không bước build, không thư viện ngoài.
+- **Lý do:** Người chấm clone về chỉ cần `npm start` (không `npm install`, không Vite/webpack) → giảm rủi ro mục “clone thư mục mới và chạy theo README”. Cấu trúc vẫn tách lớp như React: `src/api/client.js` (nơi duy nhất gọi `fetch`), `src/api/*.api.js`, `src/components/DataState.js`, `src/pages/M1…M3`. Phạm vi giao diện nhỏ (3 màn hình) nên không cần framework.
+- **Ảnh hưởng:** `src/frontend/` (README cập nhật). Lớp ① trong `architecture.drawio` vẫn là “Giao diện web (SPA)”, chỉ đổi công nghệ.
+
+### TD-14 Giao diện chạy máy chủ riêng (cổng 5173), backend bật CORS có danh sách trắng
+- **Phản hồi của GV:** (tài liệu Buổi 10) “Xong khi: tắt backend → thấy thông báo lỗi có nút thử lại”; bảng lỗi tích hợp hay gặp: CORS, sai base URL.
+- **Quyết định:** BỔ SUNG – `src/frontend/server.js` phục vụ tệp tĩnh ở cổng 5173; backend chỉ cho phép origin trong biến `FRONTEND_ORIGIN` (không dùng `*`).
+- **Lý do:** Nếu backend vừa phục vụ giao diện vừa phục vụ API thì tắt backend là mất luôn giao diện, không kiểm được trạng thái lỗi. Base URL đặt một chỗ (`src/frontend/src/config.js`); mỗi lời gọi có thời hạn 10 giây → không treo.
+- **Ảnh hưởng:** `api/middlewares/cors.js`, `config.js` (`FRONTEND_ORIGIN`, `JWT_EXPIRES_IN`), `.env.example`, README mục 3 (thêm cửa sổ terminal thứ ba).
+
+### TD-15 Hiện thực E2, E3 và bổ sung danh sách thiết bị vào E1
+- **Phản hồi của GV:** (kế hoạch buổi 8, mục 9) “E2 tạo khách hàng mới, E3 ghi nhận thiết bị” – cần cho M2 chạy end-to-end.
+- **Quyết định:** BỔ SUNG `POST /api/customers` (E2) và `POST /api/devices` (E3: tra cứu theo Serial/IMEI, chưa có thì ghi nhận mới); E1 trả thêm mảng `devices` của khách hàng (thêm trường, không đổi trường cũ).
+- **Lý do:** Wireframe M2 có nút “Tạo khách hàng mới” (UC04 – 3a) và ô Serial/IMEI “Tra cứu” (UC03, ngoại lệ 5a). Quy tắc mới đặt ở lớp ③: SĐT trùng sau chuẩn hoá → 409 `PHONE_EXISTS` (QT-01, QT-02); Serial/IMEI thuộc khách khác → 409 `DEVICE_OWNED_BY_OTHER` (QT-03); ngày mua không được ở tương lai.
+- **Ảnh hưởng:** `customerService.createCustomer`, `deviceService.js`, `deviceController.js`, `validator.js`, `docs/api-contract.md` (E0, E2, E3 chuyển ✅).
+
+### TD-16 Dữ liệu mẫu THẬT nạp qua lớp nghiệp vụ; ghi nhận phần đã cắt
+- **Phản hồi của GV:** (tài liệu Buổi 10) “Đã chạy trên dữ liệu mẫu THẬT, không phải dữ liệu tự gõ vài dòng”; “ghi nhận phần đã cắt và lý do”.
+- **Quyết định:** BỔ SUNG `npm run seed` nạp bộ CSV của học phần (`data/mau/`): 402 khách hàng thô, 302 đơn hàng (→ thiết bị, ngày mua = ngày đơn hàng), 120 mô tả sự cố thật (→ phiếu). **Cắt/hoãn:** (1) chỉ nạp phiếu cho 2 trung tâm có nhân viên mẫu (TT-CT01, TT-CT02), 60 phiếu mỗi trung tâm; (2) không có màn hình quản lý danh mục, tài khoản, đổi mật khẩu; (3) khung ④ của M2 không “xem trước” kết quả bảo hành – kết quả do backend tính khi lưu và hiện ở M3, tránh lặp quy tắc QT-04/QT-05 ở giao diện; (4) chưa có test giao diện tự động trong repo – kiểm bằng 5 test case thủ công (`docs/test-cases.md`).
+- **Lý do:** Dữ liệu đi qua CustomerService, DeviceService, TicketService nên áp đúng quy tắc như khi nhập tay; 23 + 12 dòng có SĐT không chuẩn hoá được bị loại và được đếm; chạy lại không nhân đôi (khoá nghiệp vụ: SĐT, Serial/IMEI, thiết bị + mô tả). Phần cắt đều ngoài luồng chính hoặc ngoài User Story BT1.
+- **Ảnh hưởng:** `scripts/seed-mau.js`, `data/mau/` (kèm README nguồn), README mục 3.
+
 ## Sau phản hồi Bài tập 1 (buổi 8, ngày 19/10/2026)
 
 Điểm BT1: 9.5/10 (Đầy đủ 9.75 · Kỹ thuật 9.25 · Nhất quán 9.75 · Trình bày 7.5). Giảng viên không góp ý về
