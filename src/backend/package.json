@@ -1,6 +1,6 @@
 {
   "name": "smartcrm-l2-backend",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Smart CRM – Luồng L2: Tiếp nhận và phân loại yêu cầu bảo hành (backend 4 lớp)",
   "main": "src/server.js",
@@ -11,10 +11,13 @@
     "start": "node --env-file=../../.env src/server.js",
     "dev": "node --env-file=../../.env --watch src/server.js",
     "migrate": "node --env-file=../../.env scripts/migrate.js",
+    "seed": "node --env-file=../../.env scripts/seed-mau.js",
     "token": "node --env-file=../../.env scripts/make-token.js",
     "demo": "node --env-file=../../.env scripts/demo.js",
     "nfr2": "node --env-file=../../.env scripts/nfr2-concurrency.js",
-    "test": "node --test ../../tests/backend/slaPolicy.test.js ../../tests/backend/warrantyPolicy.test.js ../../tests/backend/phonePolicy.test.js ../../tests/backend/ticketService.test.js ../../tests/backend/validator.test.js"
+    "test": "node --test ../../tests/backend/slaPolicy.test.js ../../tests/backend/warrantyPolicy.test.js ../../tests/backend/phonePolicy.test.js ../../tests/backend/ticketService.test.js ../../tests/backend/validator.test.js ../../tests/backend/buoi10.test.js",
+    "e2e": "node --env-file=../../.env scripts/e2e.js",
+    "test:repo": "node --env-file=../../.env --test ../../tests/repository/repositories.test.js"
   },
   "dependencies": {
     "express": "^4.21.2",
