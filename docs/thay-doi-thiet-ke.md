@@ -18,7 +18,7 @@ chạy end-to-end trên dữ liệu mẫu thật; “ghi nhận phần đã cắ
 - **Phản hồi của GV:** (quyết định kỹ thuật khi hiện thực Sprint 2) – README frontend buổi 8 ghi “React SPA”.
 - **Quyết định:** SỬA – 3 màn hình M1–M3 + trang đăng nhập viết bằng JavaScript ES modules chạy thẳng trên trình duyệt, không bước build, không thư viện ngoài.
 - **Lý do:** Người chấm clone về chỉ cần `npm start` (không `npm install`, không Vite/webpack) → giảm rủi ro mục “clone thư mục mới và chạy theo README”. Cấu trúc vẫn tách lớp như React: `src/api/client.js` (nơi duy nhất gọi `fetch`), `src/api/*.api.js`, `src/components/DataState.js`, `src/pages/M1…M3`. Phạm vi giao diện nhỏ (3 màn hình) nên không cần framework.
-- **Ảnh hưởng:** `src/frontend/` (README cập nhật). Lớp ① trong `architecture.drawio` vẫn là “Giao diện web (SPA)”, chỉ đổi công nghệ.
+- **Ảnh hưởng:** `src/frontend/` (README cập nhật); nhãn lớp ① trong `docs/architecture.drawio` và `docs/export/architecture.png` đổi từ “React SPA” thành “Giao diện web SPA (JavaScript ES modules)”; dòng Ràng buộc kỹ thuật trong `docs/srs.md` cập nhật. Thành phần và luồng gọi giữa các lớp không đổi.
 
 ### TD-14 Giao diện chạy máy chủ riêng (cổng 5173), backend bật CORS có danh sách trắng
 - **Phản hồi của GV:** (tài liệu Buổi 10) “Xong khi: tắt backend → thấy thông báo lỗi có nút thử lại”; bảng lỗi tích hợp hay gặp: CORS, sai base URL.

@@ -112,7 +112,7 @@ Lệnh khác (tuỳ chọn): `npm run demo` (11 tình huống API) · `npm run n
 
 ## 6. Trạng thái hiện tại (buổi 10 – Sprint 2)
 - [x] Buổi 8: module cốt lõi Phiếu bảo hành qua 3 lớp; migration theo DDL BT1; 35 unit test; script NFR2 (TD-01…TD-11)
-- [x] **Module mở rộng [SE]:** giao diện 3 màn hình theo wireframe BT1 (M1 danh sách, M2 tiếp nhận, M3 chi tiết + xét duyệt) gọi API thật qua `src/api/client.js` + `tickets.api.js`; trang Đăng nhập; 401 → xoá token, về trang đăng nhập
+- [x] **Module mở rộng [SE]:** giao diện 3 màn hình theo wireframe BT1 (M1 danh sách, M2 tiếp nhận, M3 chi tiết + xét duyệt) gọi API thật qua `src/frontend/src/api/client.js` + `tickets.api.js`; trang Đăng nhập; 401 → xoá token, về trang đăng nhập
 - [x] Mọi vùng dữ liệu bọc bằng `DataState` (đang tải · rỗng có câu giải thích · lỗi có nút **Thử lại**); tắt backend → thấy thông báo lỗi; `grep -rn "fetch(" src/frontend/src/pages` rỗng
 - [x] E2 tạo khách hàng, E3 ghi nhận thiết bị (TD-15)
 - [x] Luồng chính chạy **end-to-end** trên **dữ liệu mẫu thật** (`npm run seed`, `npm run e2e`, và trên giao diện)

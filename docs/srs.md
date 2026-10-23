@@ -129,7 +129,7 @@ Mã QT-xx giữ nguyên đánh số của Bảng 9.1 trong case study (đã dùn
 | QT-A2 | Mã phiếu có dạng BH-NNNNNN/YYYY; NNNNNN lấy từ bộ đếm của CSDL, không tái sử dụng. | Phân tích của em |
 | QT-A3 | Quyết định xét duyệt đã lưu không được ghi đè; ghi chú là bắt buộc. | Phân tích của em |
 
-**Ràng buộc kỹ thuật:** Node.js 20 LTS + Express, PostgreSQL 16, React; prototype chạy được trước buổi 12. BT1 chỉ gồm tài liệu và sơ đồ, không có mã nguồn.
+**Ràng buộc kỹ thuật:** Node.js 20 LTS + Express, PostgreSQL 16, giao diện web SPA (JavaScript ES modules – đổi từ React ở Buổi 10, xem TD-13); prototype chạy được trước buổi 12. BT1 chỉ gồm tài liệu và sơ đồ, không có mã nguồn.
 
 
 ## 1.6. Bảng truy vết yêu cầu
