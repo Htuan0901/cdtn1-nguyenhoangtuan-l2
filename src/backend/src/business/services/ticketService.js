@@ -3,6 +3,7 @@
 // Nhận repository qua hàm khởi tạo → test được bằng repository giả, không cần CSDL.
 const { badRequest, forbidden, notFound, conflict } = require('../errors');
 const { checkWarranty } = require('../policies/warrantyPolicy');
+const { normalizePhone } = require('../policies/phonePolicy');
 
 const PAGE_SIZE = 20; // NFR3
 
@@ -52,8 +53,9 @@ function createTicketService({ ticketRepo, statusLogRepo, customerRepo, deviceRe
   // UC06 – Danh sách phiếu bảo hành, chỉ trung tâm của người dùng (QT-14)
   async function listTickets(ctx, filters) {
     const page = Math.max(1, Number(filters.page) || 1);
+    const q = filters.q ? (normalizePhone(filters.q) || filters.q.trim().toUpperCase()) : undefined; // "0901 234 567" → 0901234567
     const { total, rows } = await ticketRepo.search({
-      ...filters, centerCode: ctx.centerCode, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE,
+      ...filters, q, centerCode: ctx.centerCode, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE,
     });
     return { page, pageSize: PAGE_SIZE, total, items: rows };
   }

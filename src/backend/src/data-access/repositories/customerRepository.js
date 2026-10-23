@@ -10,4 +10,12 @@ async function findById(id, db = pool) {
   return rows[0] || null;
 }
 
-module.exports = { findByPhone, findById };
+async function insert({ fullName, phone }, db = pool) {
+  const { rows } = await db.query(
+    'INSERT INTO customer (full_name, phone) VALUES ($1, $2) RETURNING id, full_name, phone',
+    [fullName, phone],
+  );
+  return rows[0];
+}
+
+module.exports = { findByPhone, findById, insert };

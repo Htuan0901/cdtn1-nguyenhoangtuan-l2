@@ -30,9 +30,14 @@ const ticketDetail = (t, role) => ({
   },
 });
 
+const deviceItem = (d) => ({
+  deviceId: d.id, serialImei: d.serial_imei, modelName: d.model_name,
+  purchaseDate: d.purchase_date, warrantyMonths: d.warranty_months,
+});
+
 const historyItem = (h) => ({
   changedAt: toVnIso(h.changed_at), fromStatus: h.from_status, toStatus: h.to_status,
   changedBy: h.changed_by_name, note: h.note,
 });
 
-module.exports = { toVnIso, phoneFor, ticketSummary, ticketDetail, historyItem };
+module.exports = { toVnIso, phoneFor, ticketSummary, ticketDetail, historyItem, deviceItem };

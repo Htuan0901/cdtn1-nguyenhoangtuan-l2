@@ -7,6 +7,9 @@ const config = {
   jwtSecret: process.env.JWT_SECRET,
   slaConfigPath: path.join(__dirname, '..', 'config', 'sla.config.json'),
   pageSize: 20, // NFR3: phân trang 20 dòng tại CSDL
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '8h',
+  // Địa chỉ giao diện được phép gọi API (CORS) – nhiều địa chỉ cách nhau bằng dấu phẩy
+  frontendOrigins: (process.env.FRONTEND_ORIGIN || 'http://localhost:5173').split(',').map((s) => s.trim()),
 };
 
 function assertConfig() {

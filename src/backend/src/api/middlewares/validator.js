@@ -8,7 +8,22 @@ const STATUSES = ['MOI', 'CHO_XAC_MINH'];
 const isPosInt = (v) => Number.isInteger(v) && v > 0;
 const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v);
 
+const isText = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
+const opt = (v, ok) => v === undefined || v === null || v === '' || ok(v);
+
 const schemas = {
+  login: (b) => ({ username: isText(b.username, 50), password: isText(b.password, 100) }),
+  createCustomer: (b) => ({
+    fullName: isText(b.fullName, 100),
+    phone: typeof b.phone === 'string' && b.phone.length <= 20,
+  }),
+  registerDevice: (b) => ({
+    customerId: isPosInt(b.customerId),
+    serialImei: isText(b.serialImei, 50),
+    modelName: opt(b.modelName, (v) => isText(v, 100)),
+    purchaseDate: opt(b.purchaseDate, isDate),
+    warrantyMonths: b.warrantyMonths === undefined || (Number.isInteger(b.warrantyMonths) && b.warrantyMonths >= 0 && b.warrantyMonths <= 60),
+  }),
   lookupCustomer: (b) => ({ phone: typeof b.phone === 'string' && b.phone.length <= 20 }),
   createTicket: (b) => ({
     customerId: isPosInt(b.customerId),
