@@ -1,0 +1,12 @@
+{
+  "name": "smartcrm-l2-frontend",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Smart CRM – Luồng L2: giao diện M1–M3 + đăng nhập (JavaScript ES modules, không cần build)",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
