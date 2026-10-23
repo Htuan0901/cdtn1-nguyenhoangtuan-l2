@@ -1,0 +1,19 @@
+# Test case – Buổi 10 (Sprint 2): luồng chính trên giao diện
+
+Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 · Luồng L2 · track SE
+
+Năm test case **thủ công trên giao diện** (bổ sung cho test tự động), chạy trên hệ thống dựng theo README mục 3
+với **dữ liệu mẫu thật** đã nạp bằng `npm run seed`. Kết quả từng lần chạy ghi ở `docs/test-execution.md`.
+
+**Tiền điều kiện chung:** backend `npm start` (cổng 3000), giao diện `npm start` (cổng 5173), đã `npm run migrate` và `npm run seed`;
+tài khoản `nv01`, `ql01` (TT-CT01), mật khẩu `Mekong@2026`.
+
+| Mã | Mục tiêu (truy vết) | Tiền điều kiện | Các bước | Dữ liệu thử | Kết quả mong đợi | Loại | Ưu tiên |
+|---|---|---|---|---|---|---|---|
+| TC-B10-01 | Đăng nhập; 401 → về trang đăng nhập (TD-12, NFR4) | Chưa đăng nhập | 1. Mở http://localhost:5173 · 2. Nhập `nv01` + mật khẩu sai → Đăng nhập · 3. Nhập đúng mật khẩu → Đăng nhập · 4. Sửa token trong localStorage thành chuỗi sai (F12 → Application) rồi bấm **Lọc** | `nv01` / `sai-mat-khau`, rồi `Mekong@2026` | B2: chữ đỏ “Sai tên đăng nhập hoặc mật khẩu”, vẫn ở trang đăng nhập · B3: mở M1, thanh trên ghi “TT-CT01 · Trần Thị Bình (Nhân viên tiếp nhận)” · B4: token bị xoá, quay về trang đăng nhập với thông báo “… hết hạn – vui lòng đăng nhập lại” | Dữ liệu sai + luồng đúng | Cao |
+| TC-B10-02 | Luồng chính UC04: tạo phiếu cho khách có sẵn, thiết bị mới có ngày mua (FR1, FR3–FR6) | Đăng nhập `nv01` | 1. M1 → **+ Tạo phiếu bảo hành** · 2. SĐT → Tra cứu · 3. Serial/IMEI mới → Tra cứu → nhập Tên model, Ngày mua · 4. Nhập mô tả, chọn Nhóm sự cố · 5. **Tạo phiếu bảo hành** | SĐT `0881 010 061` (Lê Bảo Tâm – dòng 1 `customers_raw.csv`); Serial `MM-IMEI-B10-0001`, `Mekong A5`, mua 14/02/2026; nhóm **Màn hình** | B2: “✓ Lê Bảo Tâm · 088****061” (SĐT có khoảng trắng vẫn tra được – QT-02) · B4: Mức ưu tiên tự đề xuất **Trung bình** (QT-A1) · B5: thông báo “Đã tạo phiếu BH-…/2026”, mở M3: trạng thái **Mới**, **Còn bảo hành**, hạn cam kết = tiếp nhận + 72 giờ làm việc (QT-04), lịch sử 1 dòng | Luồng đúng | Cao |
+| TC-B10-03 | Ngoại lệ UC04 – 10a, 8a và UC07 xét duyệt (FR7) | Đăng nhập `nv01` | 1. M2: tra cứu SĐT, Serial mới, chỉ nhập Tên model (bỏ trống ngày mua), chọn nhóm **Pin**, **không** nhập mô tả → Tạo · 2. Nhập mô tả → Tạo · 3. Đăng xuất, đăng nhập `ql01`, mở phiếu vừa tạo · 4. Bấm Lưu quyết định khi ghi chú trống · 5. Nhập ghi chú → Lưu | SĐT `0342849968`; Serial `MM-IMEI-B10-0002`, `Mekong X5`; ghi chú “Khách cung cấp tin nhắn xác nhận đơn hàng ngày 14/02/2026” | B1: khung đỏ cảnh báo thiếu ngày mua (8a) và “Thiếu dữ liệu bắt buộc: Mô tả lỗi. Phiếu chưa được tạo (10a)” · B2: phiếu **Chờ xác minh bảo hành**, **Chưa xác minh** · B4: “Ghi chú là bắt buộc (UC07 – 5a)” · B5: trạng thái **Mới**, lịch sử 2 dòng (Chờ xác minh → Mới, Đặng Văn Khoa) | Giá trị biên / luồng ngoại lệ | Cao |
+| TC-B10-04 | M1 danh sách, phân trang, bộ lọc rỗng, trạng thái đang tải (UC06 – 2a, NFR3) | Đăng nhập `nv01` | 1. Mở M1 · 2. Quan sát lúc đang tải · 3. Bấm **Sau »** · 4. Nhập SĐT không có phiếu → **Lọc** | `0999999999` | B1: tối đa 20 dòng/trang, “Hiển thị 1–20 / N phiếu bảo hành”, chỉ phiếu TT-CT01, SĐT dạng che · B2: “Đang tải dữ liệu…” · B3: trang 2 · B4: câu giải thích “Không có phiếu bảo hành phù hợp với bộ lọc…”, **không** báo lỗi | Giá trị biên (rỗng) | Trung bình |
+| TC-B10-05 | Xử lý lỗi khi tắt backend, có nút Thử lại (checklist Buổi 10) | Đăng nhập `nv01`, đang ở M1 | 1. Ở cửa sổ backend bấm Ctrl + C · 2. Tải lại trang (F5) · 3. Chạy lại `npm start` · 4. Bấm **Thử lại** | — | B2: khung đỏ “Không tải được dữ liệu. Không kết nối được máy chủ API (http://localhost:3000/api)…” + nút **Thử lại**, trang không treo · B4: danh sách hiện lại đầy đủ, không cần đăng nhập lại | Luồng ngoại lệ | Cao |
+
+Ghi chú: test tự động bổ sung – 40 unit test (`npm test`), 5 test repository (`npm run test:repo`), luồng chính qua API (`npm run e2e`).
