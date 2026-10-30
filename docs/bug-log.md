@@ -7,14 +7,14 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 |---|---|---|---|---|---|
 | BUG-01 | Major | Mở chi tiết phiếu ra 404 vì mã phiếu chứa “/” | Buổi 8 | [7aebb38](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/7aebb38) | `npm run demo` tình huống 7–10, `npm run e2e` bước 7 |
 | BUG-02 | Major | Lỗi trong controller async làm request treo | Buổi 8 | [7aebb38](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/7aebb38) | `npm run demo` tình huống 2, 5, 8 |
-| BUG-03 | Major | Tìm phiếu theo SĐT có khoảng trắng không ra kết quả | Buổi 10 | [47e2bc2](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/47e2bc2) · test [1183e34](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/1183e34) | TC-29 |
+| BUG-03 | Major | Tìm phiếu theo SĐT có khoảng trắng không ra kết quả | Buổi 10 | [47e2bc2](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/47e2bc2) · test [e1125cf](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/e1125cf) | TC-29 |
 | BUG-04 | Minor | `npm run seed` đếm thiết bị vào cột “bị loại” dù đã nạp | Buổi 10 | [6901a7d](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/6901a7d) | chạy lại seed: đọc = nạp + đã có + loại |
 | BUG-05 | Minor | TR-05 lỗi “value too long for type character varying(20)” | Buổi 10 | [99996cc](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/99996cc) | TR-05 |
-| BUG-06 | Major | Ngày không có thật (30/02) trả 500 | Buổi 11 | [6355af4](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/6355af4) | TC-26 |
-| BUG-07 | Major | Số trang / mã khách quá lớn trả 500 | Buổi 11 | [6355af4](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/6355af4) | TC-27 |
-| BUG-08 | Major | Mở giao diện bằng 127.0.0.1 → CORS chặn mọi lời gọi API | Buổi 11 | [5b243de](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/5b243de) | TC-28 |
-| BUG-09 | Major | CSDL mất kết nối → 500 không mã tra cứu, log không truy vết được | Buổi 11 | [b59bb92](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/b59bb92) | TC-30, TC-33 |
-| BUG-10 | **Critical** | CSDL khởi động lại khi API đang chạy → API chết hẳn | Buổi 11 | [b59bb92](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/b59bb92) | TC-34 |
+| BUG-06 | Major | Ngày không có thật (30/02) trả 500 | Buổi 11 | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) | TC-26 |
+| BUG-07 | Major | Số trang / mã khách quá lớn trả 500 | Buổi 11 | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) | TC-27 |
+| BUG-08 | Major | Mở giao diện bằng 127.0.0.1 → CORS chặn mọi lời gọi API | Buổi 11 | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) | TC-28 |
+| BUG-09 | Major | CSDL mất kết nối → 500 không mã tra cứu, log không truy vết được | Buổi 11 | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) | TC-30, TC-33 |
+| BUG-10 | **Critical** | CSDL khởi động lại khi API đang chạy → API chết hẳn | Buổi 11 | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) | TC-34 |
 
 ---
 
@@ -27,7 +27,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | `npm start` → gọi `GET /api/tickets` một lần (để pool có kết nối rảnh) → dừng PostgreSQL → `curl localhost:3000/health`: không phản hồi. Tái lập **3/3 lần** |
 | 5. Nguyên nhân | Khi CSDL đóng kết nối, kết nối RẢNH trong `pg.Pool` phát sự kiện `'error'`; `db.js` không đăng ký listener nên Node.js coi là lỗi chưa xử lý và dừng tiến trình. Khoanh vùng: ngăn xếp lỗi kết thúc ở `BoundPool` (lớp ④), không đi qua controller |
 | 6. Cách sửa | `data-access/db.js`: `pool.on('error', …)` ghi WARN – pool tự bỏ kết nối hỏng và tạo kết nối mới; thêm `connectionTimeoutMillis: 5000` để request không treo khi CSDL không trả lời |
-| 7. Commit và xác nhận | [b59bb92](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/b59bb92) · chạy lại bước 4 ba lần: API vẫn trả 200 sau mỗi lần CSDL bật lại · TC-34 PASS |
+| 7. Commit và xác nhận | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) · chạy lại bước 4 ba lần: API vẫn trả 200 sau mỗi lần CSDL bật lại · TC-34 PASS |
 
 ### BUG-09 · Major – CSDL mất kết nối trả 500, người dùng không có mã tra cứu, log không truy vết được
 | Dòng | Nội dung |
@@ -38,7 +38,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | Dừng PostgreSQL → `curl -H "Authorization: Bearer <JWT>" localhost:3000/api/tickets` (5/5 lần) |
 | 5. Nguyên nhân | Lỗi kỹ thuật của thư viện pg (ECONNREFUSED) đi thẳng lên middleware mà không được DỊCH ở lớp dữ liệu, nên middleware không phân biệt được “CSDL không sẵn sàng” (503) với lỗi lập trình (500); ứng dụng không có logger và không gắn requestId cho request |
 | 6. Cách sửa | `data-access/errors.js` dịch lỗi pg → DB_UNAVAILABLE / DUPLICATE_KEY / DB_ERROR; middleware lỗi duy nhất trả 503 `LOI_HE_THONG` + “Mã tra cứu: <requestId>”, ghi ERROR **một lần** kèm requestId; `logger.js` JSON có thời điểm +07:00, tự che dữ liệu nhạy cảm; `/health` kiểm cả CSDL |
-| 7. Commit và xác nhận | [b59bb92](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/b59bb92) · bước 4 → 503 + mã tra cứu, đúng 1 dòng ERROR trong log · TC-30, TC-33 PASS |
+| 7. Commit và xác nhận | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) · bước 4 → 503 + mã tra cứu, đúng 1 dòng ERROR trong log · TC-30, TC-33 PASS |
 
 ### BUG-08 · Major – Mở giao diện bằng 127.0.0.1 thì mọi màn hình báo lỗi kết nối
 | Dòng | Nội dung |
@@ -49,7 +49,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | `curl -i -X OPTIONS localhost:3000/api/tickets -H "Origin: http://127.0.0.1:5173"` → không có header `Access-Control-Allow-Origin` |
 | 5. Nguyên nhân | `FRONTEND_ORIGIN` mặc định (config.js và .env.example) chỉ có `http://localhost:5173`; với trình duyệt, localhost và 127.0.0.1 là hai origin khác nhau |
 | 6. Cách sửa | Mặc định gồm cả hai origin, cách nhau bằng dấu phẩy; vẫn không dùng “*” (NFR4) |
-| 7. Commit và xác nhận | [5b243de](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/5b243de) · bước 4 có header đúng · TC-28 PASS (kể cả origin lạ vẫn bị từ chối) |
+| 7. Commit và xác nhận | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) · bước 4 có header đúng · TC-28 PASS (kể cả origin lạ vẫn bị từ chối) |
 
 ### BUG-07 · Major – Số trang hoặc mã khách quá lớn trả 500
 | Dòng | Nội dung |
@@ -60,7 +60,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | Hai lệnh curl ở dòng 3 (3/3 lần); log: `invalid input syntax for type bigint: "2e+21"`, `value "3000000000" is out of range for type integer` |
 | 5. Nguyên nhân | Validator chỉ kiểm “là số nguyên dương”, không kiểm giới hạn kiểu INT của PostgreSQL; Number(…) đổi số rất lớn thành dạng mũ `2e+21` |
 | 6. Cách sửa | Validator (ranh giới lớp ②) giới hạn `page` ≤ 10.000 và mã ≤ 2.147.483.647 → 400 VALIDATION_ERROR |
-| 7. Commit và xác nhận | [6355af4](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/6355af4) · bước 4 → 400 kèm tên trường · TC-27 PASS (biên 10.000 vẫn hợp lệ) |
+| 7. Commit và xác nhận | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) · bước 4 → 400 kèm tên trường · TC-27 PASS (biên 10.000 vẫn hợp lệ) |
 
 ### BUG-06 · Major – Ngày không có thật trả 500
 | Dòng | Nội dung |
@@ -71,7 +71,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | `curl "localhost:3000/api/tickets?from=2026-02-30" -H "Authorization: Bearer <JWT>"` (3/3 lần); log: `date/time field value out of range` (22008) |
 | 5. Nguyên nhân | `isDate` chỉ kiểm hình dạng `YYYY-MM-DD` bằng biểu thức chính quy, không kiểm ngày có thật trên lịch; lỗi chỉ lộ ra khi PostgreSQL ép kiểu `::date` |
 | 6. Cách sửa | `isDate` dựng lại ngày và so khớp chuỗi → 30/02, 31/04 bị từ chối 400; năm nhuận 29/02/2028 vẫn hợp lệ |
-| 7. Commit và xác nhận | [6355af4](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/6355af4) · TC-26 PASS |
+| 7. Commit và xác nhận | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) · TC-26 PASS |
 
 ### BUG-05 · Minor – Test repository TR-05 lỗi “value too long”
 | Dòng | Nội dung |
@@ -104,7 +104,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | `GET /api/tickets?q=0901%20234%20567` |
 | 5. Nguyên nhân | Lệch hợp đồng: giao diện gửi SĐT nguyên văn, CSDL lưu SĐT đã chuẩn hoá (QT-02); repository so khớp bằng `=` |
 | 6. Cách sửa | `ticketService.listTickets` chuẩn hoá `q` bằng QT-02 trước khi tìm (mã phiếu: bỏ khoảng trắng, chữ hoa) |
-| 7. Commit và xác nhận | sửa [47e2bc2](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/47e2bc2) · test [1183e34](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/1183e34): TC-29 FAIL trên mã trước khi sửa, PASS sau khi sửa |
+| 7. Commit và xác nhận | sửa [47e2bc2](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/47e2bc2) · test [e1125cf](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/e1125cf): TC-29 FAIL trên mã trước khi sửa, PASS sau khi sửa |
 
 ### BUG-02 · Major – Lỗi trong controller async làm request treo
 | Dòng | Nội dung |

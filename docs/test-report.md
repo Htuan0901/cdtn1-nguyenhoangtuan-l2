@@ -87,5 +87,5 @@ Môi trường: Node.js 20 LTS · PostgreSQL 16 (Docker) · dữ liệu mẫu th
 | TC-B12-01 | M4: tìm khách, rỗng, sửa SĐT trùng, Quản lý xoá khách đang có thiết bị | câu giải thích khi rỗng; chữ đỏ 409; NV không thấy nút xoá | đúng | PASS |
 
 ## 5. Ghi chú về tính trung thực
-- TC-26, TC-27, TC-28 được viết **trước** khi sửa và **FAIL** trên mã cũ, sau khi sửa thì PASS (BUG-06, BUG-07, BUG-08). TC-29 FAIL khi chạy trên `ticketService.js` của commit 436e3a8 (trước BUG-03); TC-34 FAIL khi chạy trên `db.js` của commit 1183e34 (trước BUG-10). TC-30 … TC-33 kiểm hành vi mới của logger và middleware lỗi (BUG-09) nên được viết cùng lúc với mã.
+- TC-26, TC-27, TC-28 được viết **trước** khi sửa và **FAIL** trên mã cũ, sau khi sửa thì PASS (BUG-06, BUG-07, BUG-08). TC-29 FAIL khi chạy trên `ticketService.js` của commit 436e3a8 (trước BUG-03); TC-34 FAIL khi chạy trên `db.js` của commit 8c62fff (trước BUG-10). TC-30 … TC-33 kiểm hành vi mới của logger và middleware lỗi (BUG-09) nên được viết cùng lúc với mã.
 - Trước Buổi 11, API chết khi CSDL khởi động lại (BUG-10, Critical) – không bộ unit test nào phát hiện vì lỗi chỉ xuất hiện khi chạy cả hệ thống với CSDL thật; phát hiện bằng kiểm thử thủ công TC-B11-02.
