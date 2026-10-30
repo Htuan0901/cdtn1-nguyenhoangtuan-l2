@@ -11,7 +11,8 @@ const staffRepo = require('../src/data-access/repositories/staffRepository');
 const customerRepo = require('../src/data-access/repositories/customerRepository');
 const { normalizePhone } = require('../src/business/policies/phonePolicy');
 
-const DATA_DIR = path.join(__dirname, '..', '..', '..', 'data', 'mau');
+// Mặc định data/mau ở thư mục gốc repo; trong Docker image đặt bằng biến SEED_DATA_DIR
+const DATA_DIR = process.env.SEED_DATA_DIR || path.join(__dirname, '..', '..', '..', 'data', 'mau');
 const TICKETS_PER_CENTER = 60;
 const CENTER_OF = { 1: { code: 'TT-CT01', staff: 'nv01' }, 2: { code: 'TT-CT02', staff: 'nv02' } }; // center_id trong CSV
 const MODELS = ['Mekong A3', 'Mekong A5', 'Mekong X5', 'Mekong S2', 'Mekong Note 11', 'Mekong Tab 10'];

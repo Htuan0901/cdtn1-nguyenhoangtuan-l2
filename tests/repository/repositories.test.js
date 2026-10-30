@@ -9,13 +9,15 @@ const customerRepo = require('../../src/backend/src/data-access/repositories/cus
 const deviceRepo = require('../../src/backend/src/data-access/repositories/deviceRepository');
 const ticketRepo = require('../../src/backend/src/data-access/repositories/ticketRepository');
 const statusLogRepo = require('../../src/backend/src/data-access/repositories/statusLogRepository');
+const { translate } = require('../../src/backend/src/data-access/errors');
 
-// Chạy work(client) trong giao dịch rồi LUÔN rollback
+// Chạy work(tx) trong giao dịch rồi LUÔN rollback. tx dịch lỗi pg giống withTransaction thật (TD-17)
 async function inRollback(work) {
   const client = await pool.connect();
+  const tx = { query: (...args) => client.query(...args).catch((err) => { throw translate(err); }) };
   try {
     await client.query('BEGIN');
-    return await work(client);
+    return await work(tx);
   } finally {
     await client.query('ROLLBACK');
     client.release();
@@ -45,7 +47,7 @@ test('TR-01 customerRepository: insert rồi findByPhone trả đúng dòng; SĐ
     const found = await customerRepo.findByPhone('0999000001', db);
     assert.deepEqual(found, { id: c.id, full_name: 'Khách Test', phone: '0999000001' });
     await db.query('SAVEPOINT sp');
-    await assert.rejects(customerRepo.insert({ fullName: 'Trùng', phone: '0999000001' }, db), (e) => e.code === '23505');
+    await assert.rejects(customerRepo.insert({ fullName: 'Trùng', phone: '0999000001' }, db), (e) => e.code === 'DUPLICATE_KEY');
     await db.query('ROLLBACK TO SAVEPOINT sp');
   }));
 
@@ -99,3 +101,38 @@ test('TR-05 withTransaction: lỗi sau khi đã INSERT phiếu → ROLLBACK, CSD
   const logs = await pool.query('SELECT count(*)::int AS n FROM ticket_status_log WHERE ticket_id = $1', [ticketId]);
   assert.equal(logs.rows[0].n, 0);
 });
+
+/* ---------- Buổi 12: SQL của CRUD khách hàng, thiết bị ---------- */
+test('TR-06 customerRepository.update: chỉ đổi trường được gửi; search tìm theo SĐT chính xác hoặc họ tên không phân biệt hoa thường', () =>
+  inRollback(async (db) => {
+    const c = await customerRepo.insert({ fullName: 'Khách Tìm Kiếm', phone: '0999000006' }, db);
+    const u = await customerRepo.update(c.id, { fullName: 'Khách Đã Đổi Tên' }, db);
+    assert.deepEqual(u, { id: c.id, full_name: 'Khách Đã Đổi Tên', phone: '0999000006' });
+    const byPhone = await customerRepo.search({ phone: '0999000006', limit: 20, offset: 0 }, db);
+    assert.deepEqual(byPhone.rows.map((r) => r.id), [c.id]);
+    const byName = await customerRepo.search({ name: 'đã đổi', limit: 20, offset: 0 }, db);
+    assert.ok(byName.rows.some((r) => r.id === c.id && r.device_count === 0 && r.ticket_count === 0));
+  }));
+
+test('TR-07 deviceRepository.update: purchaseDate undefined giữ nguyên, null xoá ngày mua; model và số tháng đổi đúng', () =>
+  inRollback(async (db) => {
+    const c = await customerRepo.insert({ fullName: 'Khách Thiết Bị', phone: '0999000007' }, db);
+    const d = await deviceRepo.insert({ customerId: c.id, serialImei: 'TEST-REPO-U', modelName: 'A', purchaseDate: '2026-01-15', warrantyMonths: 12 }, db);
+    const a = await deviceRepo.update(d.id, { modelName: 'B', warrantyMonths: 24 }, db);
+    assert.deepEqual([a.model_name, a.purchase_date, a.warranty_months], ['B', '2026-01-15', 24]);
+    const b = await deviceRepo.update(d.id, { purchaseDate: null }, db);
+    assert.equal(b.purchase_date, null);
+  }));
+
+test('TR-08 xoá: thiết bị đã có phiếu bị CSDL chặn (khoá ngoại → IN_USE); thiết bị chưa có phiếu xoá được', () =>
+  inRollback(async (db) => {
+    const f = await fixture(db, '8');
+    await ticketRepo.insert(ticketRow(f, 'TEST-FK-8', 'TT-TEST1', new Date()), db);
+    assert.equal(await deviceRepo.countTickets(f.d.id, db), 1);
+    await db.query('SAVEPOINT sp');
+    await assert.rejects(deviceRepo.remove(f.d.id, db), (e) => e.code === 'IN_USE');
+    await db.query('ROLLBACK TO SAVEPOINT sp');
+    const d2 = await deviceRepo.insert({ customerId: f.c.id, serialImei: 'TEST-REPO-DEL', modelName: 'X', purchaseDate: null, warrantyMonths: 12 }, db);
+    assert.equal(await deviceRepo.remove(d2.id, db), 1);
+    assert.equal(await deviceRepo.findById(d2.id, db), null);
+  }));
