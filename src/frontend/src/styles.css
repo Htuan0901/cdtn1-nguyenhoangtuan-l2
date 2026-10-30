@@ -22,6 +22,11 @@ textarea { width: 100%; resize: vertical; }
 .btn:hover:not(:disabled) { border-color: var(--primary); }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
 .btn-primary { background: var(--primary); border-color: var(--primary); color: var(--primary-text); font-weight: 600; }
+a.nav { margin-right: 14px; color: var(--primary); text-decoration: none; font-weight: 600; }
+a.nav:hover { text-decoration: underline; }
+.btn-danger { color: var(--danger); border-color: var(--danger); }
+.msg-cell .field-error { margin: 0; font-size: 13px; }
+#device-table input { width: 100%; }
 .link { background: none; border: 0; color: var(--primary); cursor: pointer; font: inherit; padding: 0; }
 .filters { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 10px 14px; align-items: end;
   background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
