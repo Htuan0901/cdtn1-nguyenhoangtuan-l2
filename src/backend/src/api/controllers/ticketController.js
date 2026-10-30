@@ -1,10 +1,15 @@
 // TicketController – E5..E8 trong docs/api-contract.md. Chỉ nhận/trả dữ liệu, không chứa quy tắc.
 const { ticketService } = require('../../container');
 const { ticketSummary, ticketDetail, historyItem } = require('../presenters/ticketPresenter');
+const { createLogger } = require('../../logger');
+
+const log = createLogger('ticket');
 
 // E5 – POST /api/tickets
 async function create(req, res) {
   const t = await ticketService.createTicket(req.ctx, req.body);
+  log.info({ requestId: req.requestId, ticketCode: t.ticket_code, customerId: t.customer_id, staffId: req.ctx.staffId,
+    status: t.status, warrantyResult: t.warranty_result }, 'đã tạo phiếu'); // ghi ID, không ghi tên/SĐT
   res.status(201).json(ticketDetail(t, req.ctx.role));
 }
 
@@ -24,6 +29,7 @@ async function detail(req, res) {
 // E8 – POST /api/tickets/:ticketCode/review
 async function review(req, res) {
   const { ticket, history } = await ticketService.reviewTicket(req.ctx, req.params.ticketCode, req.body);
+  log.info({ requestId: req.requestId, ticketCode: ticket.ticket_code, staffId: req.ctx.staffId, decision: req.body.decision }, 'đã xét duyệt phiếu');
   res.json({ ...ticketDetail(ticket, req.ctx.role), history: history.map(historyItem) });
 }
 

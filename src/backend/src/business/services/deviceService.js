@@ -1,4 +1,5 @@
-// DeviceService – UC03 / FR3: tra cứu hoặc ghi nhận thiết bị theo Serial/IMEI (QT-03).
+// DeviceService – UC03 / FR3: tra cứu hoặc ghi nhận thiết bị theo Serial/IMEI (QT-03);
+// Buổi 12 (TD-20): đủ CRUD – chi tiết, sửa (không đổi Serial/IMEI, không đổi chủ), xoá khi chưa có phiếu.
 const { badRequest, notFound, conflict } = require('../errors');
 
 const VN_OFFSET_MS = 7 * 3600e3;
@@ -33,14 +34,46 @@ function createDeviceService({ deviceRepo, customerRepo, now = () => new Date() 
       return { device, created: true };
     } catch (err) {
       // Hai nhân viên ghi nhận cùng Serial/IMEI cùng lúc → ràng buộc UNIQUE của CSDL chặn bản thứ hai
-      if (err.code === '23505') throw conflict('DEVICE_OWNED_BY_OTHER', 'Serial/IMEI vừa được ghi nhận – tra cứu lại');
+      if (err.code === 'DUPLICATE_KEY') throw conflict('DEVICE_OWNED_BY_OTHER', 'Serial/IMEI vừa được ghi nhận – tra cứu lại');
       throw err;
     }
   }
 
   const listByCustomer = (customerId) => deviceRepo.findByCustomer(customerId);
 
-  return { registerOrFind, listByCustomer };
+  async function getDevice(id) {
+    const d = await deviceRepo.findById(id);
+    if (!d) throw notFound('DEVICE_NOT_FOUND', 'Không tìm thấy thiết bị');
+    return d;
+  }
+
+  // Sửa thông tin mua hàng. Phiếu đã tạo GIỮ kết quả kiểm tra bảo hành lúc tiếp nhận (QT-05 chốt tại thời điểm tạo)
+  async function updateDevice(id, { modelName, purchaseDate, warrantyMonths }) {
+    await getDevice(id);
+    if (purchaseDate && purchaseDate > todayVn(now())) {
+      throw badRequest('PURCHASE_DATE_IN_FUTURE', 'Ngày mua không được lớn hơn ngày hiện tại', ['purchaseDate']);
+    }
+    return deviceRepo.update(id, {
+      modelName: modelName === undefined ? undefined : modelName.trim(),
+      purchaseDate: purchaseDate === '' ? null : purchaseDate,   // chuỗi rỗng = xoá ngày mua
+      warrantyMonths,
+    });
+  }
+
+  async function deleteDevice(id) {
+    await getDevice(id);
+    if (await deviceRepo.countTickets(id) > 0) {
+      throw conflict('DEVICE_IN_USE', 'Thiết bị đã có phiếu bảo hành – không thể xoá');
+    }
+    try {
+      await deviceRepo.remove(id);
+    } catch (err) {
+      if (err.code === 'IN_USE') throw conflict('DEVICE_IN_USE', 'Thiết bị vừa được tạo phiếu – không thể xoá');
+      throw err;
+    }
+  }
+
+  return { registerOrFind, listByCustomer, getDevice, updateDevice, deleteDevice };
 }
 
 module.exports = { createDeviceService };
