@@ -27,3 +27,16 @@ test('TC-19 biên độ dài mô tả lỗi: 5.000 ký tự đạt, 5.001 ký t�
 test('TC-20 bộ lọc danh sách: ngày sai định dạng và trạng thái lạ bị từ chối', () => {
   assert.deepEqual(run('listTickets', { from: '02/10/2026', status: 'DONG' }, 'query'), ['from', 'status']);
 });
+
+/* ---------- Test hồi quy Buổi 11 (docs/bug-log.md) ---------- */
+test('TC-26 ngày không có thật (30/02, 31/04) bị từ chối ở bộ lọc và ngày mua – không để CSDL báo lỗi 500 (BUG-06)', () => {
+  assert.deepEqual(run('listTickets', { from: '2026-02-30', to: '2026-04-31' }, 'query'), ['from', 'to']);
+  assert.deepEqual(run('registerDevice', { customerId: 1, serialImei: 'X', modelName: 'A', purchaseDate: '2026-02-30' }), ['purchaseDate']);
+  assert.deepEqual(run('listTickets', { from: '2028-02-29', to: '2026-12-31' }, 'query'), []); // năm nhuận vẫn hợp lệ
+});
+
+test('TC-27 số vượt giới hạn: page > 10.000, customerId/deviceId > 2.147.483.647 → 400 thay vì 500 (BUG-07)', () => {
+  assert.deepEqual(run('listTickets', { page: '99999999999999999999' }, 'query'), ['page']);
+  assert.deepEqual(run('listTickets', { page: '10000' }, 'query'), []);                       // biên trên còn hợp lệ
+  assert.deepEqual(run('createTicket', { ...ok, customerId: 3000000000, deviceId: 2147483647 }), ['customerId']);
+});

@@ -9,7 +9,7 @@ const config = {
   pageSize: 20, // NFR3: phân trang 20 dòng tại CSDL
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '8h',
   // Địa chỉ giao diện được phép gọi API (CORS) – nhiều địa chỉ cách nhau bằng dấu phẩy
-  frontendOrigins: (process.env.FRONTEND_ORIGIN || 'http://localhost:5173').split(',').map((s) => s.trim()),
+  frontendOrigins: (process.env.FRONTEND_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173').split(',').map((s) => s.trim()),
 };
 
 function assertConfig() {
