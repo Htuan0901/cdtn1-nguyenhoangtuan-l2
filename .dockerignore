@@ -1,0 +1,11 @@
+# BẮT BUỘC: không đưa node_modules của máy, .env thật, lịch sử git vào image
+**/node_modules
+.git
+.env
+*.env.local
+docs
+tests
+db
+*.pdf
+*.docx
+**/.DS_Store

@@ -1,0 +1,4 @@
+# Giữ xuống dòng LF cho tệp chạy trong container Linux (tránh lỗi "exec ./x.sh: no such file" do CRLF)
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf

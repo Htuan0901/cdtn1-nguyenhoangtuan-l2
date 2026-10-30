@@ -1,0 +1,45 @@
+# Dựng cả hệ thống bằng 2 lệnh (Buổi 11):  cp .env.example .env  →  docker compose up --build
+# Ba dịch vụ: db (PostgreSQL 16) · api (backend) · web (giao diện). Mật khẩu lấy từ .env, không ghi cứng.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: smartcrm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Thiếu DB_PASSWORD trong .env – chạy cp .env.example .env}
+    volumes:
+      - dbdata:/var/lib/postgresql/data      # giữ dữ liệu khi container bị xoá (down -v để xoá hẳn)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smartcrm"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/backend/Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:${DB_PASSWORD}@db:5432/smartcrm   # "db" = TÊN DỊCH VỤ, không phải localhost
+      JWT_SECRET: ${JWT_SECRET:?Thiếu JWT_SECRET trong .env}
+      PORT: "3000"
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173,http://127.0.0.1:5173}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    # tạo bảng (chạy lại không lỗi) → nạp dữ liệu mẫu thật (không nhân đôi) → chạy API
+    command: ["sh", "-c", "node scripts/migrate.js && node scripts/seed-mau.js && node src/server.js"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy            # chờ CSDL SẴN SÀNG, không chỉ chờ container khởi động
+
+  web:
+    build: ./src/frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  dbdata:
