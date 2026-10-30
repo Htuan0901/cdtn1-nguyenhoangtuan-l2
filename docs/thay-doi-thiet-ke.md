@@ -3,6 +3,34 @@
 > Ghi theo mẫu Buổi 8: mỗi thay đổi có mã TD-xx và đủ bốn dòng **phản hồi – quyết định – lý do – ảnh hưởng**.
 > File được nối tiếp khi nhận phản hồi BT2, BT3.
 
+## Buổi 12: hoàn thiện tích hợp – nộp Bài tập 2 (ngày 30/10/2026)
+
+### TD-20 Đủ CRUD cho Khách hàng và Thiết bị; thêm màn hình M4 Khách hàng
+- **Phản hồi của GV:** (tài liệu Buổi 12) “[SE] Đủ CRUD cho ≥ 2 thực thể (S1)”; “thêm ≥ 1 tính năng phụ nếu còn thời gian”.
+- **Quyết định:** BỔ SUNG E9–E15: danh sách/chi tiết/sửa/xoá Khách hàng và Thiết bị, màn hình M4. Sửa dùng PATCH (chỉ gửi trường cần đổi) vì Nhân viên tiếp nhận chỉ thấy SĐT dạng che. Xoá chỉ Quản lý trung tâm bảo hành, và chỉ khi khách chưa có thiết bị / thiết bị chưa có phiếu. **Giữ** TD-07: phiếu bảo hành không có xoá.
+- **Lý do:** Phiếu là chứng từ nên không xoá; khách hàng và thiết bị thì cần sửa khi nhập sai (họ tên, ngày mua) và xoá bản ghi tạo nhầm. Không cho sửa Serial/IMEI hay đổi chủ thiết bị để giữ QT-03 – nhập sai Serial thì ghi nhận thiết bị mới rồi xoá bản sai. Khách hàng không gắn trung tâm trong ERD BT1 nên danh sách khách dùng chung các trung tâm; phiếu vẫn lọc theo trung tâm (QT-14). Kiểm tra “đang được dùng” làm ở lớp nghiệp vụ để có thông báo rõ, và vẫn dựa vào khoá ngoại của CSDL cho trường hợp đồng thời (`23503` → `IN_USE` → 409).
+- **Ảnh hưởng:** `customerService`, `deviceService`, hai repository, `customerController`, `deviceController`, `routes`, `validator` (idParam, updateCustomer, updateDevice, listCustomers), `data-access/errors.js`; `src/frontend/src/pages/M4-khach-hang`; `scripts/crud.js`; test TC-35…TC-42, TR-06…TR-08; `docs/api-contract.md` E9–E15. Không đổi bảng (vẫn 6 bảng).
+
+## Buổi 11: tích hợp hệ thống và xử lý lỗi – chuẩn bị Bài tập 2 (ngày 28/10/2026)
+
+### TD-17 Xử lý lỗi xuyên lớp: dịch ở lớp dữ liệu, ánh xạ HTTP ở MỘT middleware
+- **Phản hồi của GV:** (bài giảng Buổi 11) “Mỗi lớp một trách nhiệm khi có lỗi”; năm kiểu xử lý lỗi sai.
+- **Quyết định:** BỔ SUNG `data-access/errors.js` dịch lỗi pg → `DB_UNAVAILABLE` / `DUPLICATE_KEY` / `DB_ERROR`; `errorHandler` là nơi duy nhất ánh xạ lỗi → HTTP: lỗi nghiệp vụ giữ mã 4xx, CSDL không sẵn sàng → 503, lỗi khác → 500, cả hai trả `LOI_HE_THONG` + mã tra cứu; `pool.on('error')` và `connectionTimeoutMillis` để API không chết/treo khi CSDL khởi động lại.
+- **Lý do:** Trước đây lỗi CSDL thành 500 chung chung, không truy vết được; API chết khi CSDL khởi động lại (BUG-09, BUG-10 – `docs/bug-log.md`). Lớp nghiệp vụ vẫn không biết HTTP; DeviceService nhận `DUPLICATE_KEY` thay vì mã 23505 của PostgreSQL.
+- **Ảnh hưởng:** `data-access/db.js`, `data-access/errors.js`, `api/middlewares/errorHandler.js`, `business/services/deviceService.js`, `app.js` (`/health` kiểm CSDL); `docs/api-contract.md` mục 1 thêm 500/503.
+
+### TD-18 Log JSON có requestId, không thêm thư viện
+- **Phản hồi của GV:** (bài giảng Buổi 11) bốn mức log; ba thứ mọi dòng log phải có; thứ tuyệt đối không ghi.
+- **Quyết định:** BỔ SUNG `logger.js` tự viết (≈ 40 dòng) thay vì cài pino: mỗi dòng một JSON (thời điểm +07:00, mức, logger, msg, ngữ cảnh), `LOG_LEVEL` từ môi trường, tự che khoá nhạy cảm (password, token, authorization, phone…); middleware `requestId` gắn mã cho mỗi request (header `X-Request-Id`).
+- **Lý do:** Theo “bốn câu hỏi trước khi npm install”: nhu cầu nhỏ, không đáng thêm một phụ thuộc và cây phụ thuộc con. Log chỉ ghi ID (customerId, ticketCode, staffId), không ghi tên/SĐT (QT-15). Lỗi người dùng → INFO, lỗi hệ thống → ERROR một lần kèm ngăn xếp.
+- **Ảnh hưởng:** `logger.js`, `api/middlewares/requestId.js`, controllers (INFO: tạo phiếu, xét duyệt, đăng nhập, tạo khách, ghi nhận thiết bị), `server.js`; `.env.example` thêm `LOG_LEVEL`.
+
+### TD-19 Đóng gói bằng Docker Compose (db · api · web)
+- **Phản hồi của GV:** (bài giảng Buổi 11) BT2 không bắt buộc Docker nhưng được đánh giá cao; BT3 bắt buộc ≤ 2 lệnh từ máy chưa cài gì.
+- **Quyết định:** BỔ SUNG `src/backend/Dockerfile` (hai giai đoạn, `npm ci --omit=dev` theo lock, chạy bằng user `node`, HEALTHCHECK `/health`), `src/frontend/Dockerfile`, `docker-compose.yml` (postgres:16-alpine có healthcheck; api chờ `service_healthy`, khởi động bằng migrate → seed → server), `.dockerignore`. Giữ song song cách chạy bằng Node.js (README mục 3, Cách B).
+- **Lý do:** Chặn cả năm khác biệt giữa hai máy (runtime, thư viện, .env, CSDL trống, đường dẫn). `DATABASE_URL` trong compose trỏ tới tên dịch vụ `db`; mật khẩu lấy từ `.env` (`DB_PASSWORD`, `JWT_SECRET`), không ghi cứng. CSDL không mở cổng ra máy để không đụng container `smartcrm-pg` đang dùng.
+- **Ảnh hưởng:** tệp Docker mới; `scripts/seed-mau.js` đọc `SEED_DATA_DIR`; `.nvmrc`, `.gitattributes`; README mục 2–3.
+
 ## Sprint 2 – Buổi 10: module mở rộng và giao diện (ngày 23/10/2026)
 
 Nguồn: tài liệu Buổi 10 (module mở rộng [SE]: frontend ≥ 3 màn hình gọi API thật, DataState, đăng nhập;

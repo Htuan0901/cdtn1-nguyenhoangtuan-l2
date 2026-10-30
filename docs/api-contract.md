@@ -26,11 +26,14 @@ Thiết kế REST API cho lớp ② (API – Express) trong `architecture.drawio
 | 403 | Sai vai trò hoặc khác trung tâm |
 | 404 | Không tìm thấy |
 | 409 | Xung đột dữ liệu (trùng, đã được xét duyệt) |
+| 500 / 503 | Lỗi hệ thống / CSDL không sẵn sàng – `code: "LOI_HE_THONG"`, thông điệp chung kèm **mã tra cứu** (`requestId`), không có chi tiết kỹ thuật (Buổi 11) |
 
 **Cấu trúc lỗi chung**
 ```json
 { "code": "VALIDATION_ERROR", "message": "Thiếu dữ liệu bắt buộc", "fields": ["issueDesc"] }
+{ "code": "LOI_HE_THONG", "message": "Hệ thống đang gặp sự cố. Vui lòng thử lại sau. Mã tra cứu: 7f3a2b1c", "requestId": "7f3a2b1c" }
 ```
+Mọi phản hồi có header `X-Request-Id`; ngày phải có thật trên lịch (`2026-02-30` → 400), mã số nguyên ≤ 2.147.483.647, `page` ≤ 10.000.
 
 ## 2. Danh sách endpoint
 
@@ -47,6 +50,13 @@ Trạng thái hiện thực (buổi 10): ✅ đã chạy được và được g
 | E6 ✅ | GET | `/api/tickets` | Danh sách phiếu bảo hành có lọc, phân trang | FR8 | US7 | UC06 |
 | E7 ✅ | GET | `/api/tickets/{ticketCode}` | Chi tiết phiếu + lịch sử trạng thái | FR8 | US7 | UC08 |
 | E8 ✅ | POST | `/api/tickets/{ticketCode}/review` | Xét duyệt phiếu chờ xác minh bảo hành | FR7 | US6 | UC07 |
+| E9 ✅ | GET | `/api/customers?q=&page=` | Danh sách khách hàng, tìm theo SĐT/họ tên (Buổi 12) | FR1, FR2 | US1, US2 | M4 |
+| E10 ✅ | GET | `/api/customers/{id}` | Chi tiết khách hàng + thiết bị | FR1 | US1 | M4 |
+| E11 ✅ | PATCH | `/api/customers/{id}` | Sửa họ tên / SĐT | FR2 | US2 | M4 |
+| E12 ✅ | DELETE | `/api/customers/{id}` | Xoá khách hàng chưa có thiết bị (chỉ Quản lý) | FR2 | US2 | M4 |
+| E13 ✅ | GET | `/api/devices/{id}` | Chi tiết thiết bị | FR3 | US3 | M4 |
+| E14 ✅ | PATCH | `/api/devices/{id}` | Sửa model, ngày mua, số tháng bảo hành | FR3 | US3 | M4 |
+| E15 ✅ | DELETE | `/api/devices/{id}` | Xoá thiết bị chưa có phiếu (chỉ Quản lý) | FR3 | US3 | M4 |
 
 ## 3. Chi tiết endpoint (story MUST)
 
@@ -144,6 +154,15 @@ Request: `{ "fullName": "Nguyễn Văn A", "phone": "0911 222 333" }` → 201 c�
 - 409 `DEVICE_OWNED_BY_OTHER` – Serial/IMEI thuộc khách hàng khác (UC04 – 5a, QT-03) · 400 `PURCHASE_DATE_IN_FUTURE`.
 
 E4, E7 đã chạy – xem `src/backend/scripts/demo.js` và `scripts/e2e.js`.
+
+### E9–E15. CRUD Khách hàng và Thiết bị (Buổi 12 – TD-20)
+- **E9** `GET /api/customers?q=0901%20234%20567&page=1` → 200 `{ page, pageSize: 20, total, items: [{ customerId, fullName, phone (che theo vai trò), deviceCount, ticketCount }] }`. `q` là SĐT (được chuẩn hoá QT-02, so khớp chính xác) hoặc một phần họ tên (không phân biệt hoa thường). Không có kết quả → 200 `items: []`.
+- **E10** `GET /api/customers/{id}` → 200 cùng dạng E1 (kèm `devices`); 404 `CUSTOMER_NOT_FOUND`; id không phải số nguyên dương ≤ 2.147.483.647 → 400.
+- **E11** `PATCH /api/customers/{id}` – chỉ gửi trường cần đổi: `{ "fullName"?: string, "phone"?: string }`, ít nhất một trường (thiếu → 400 `fields: ["body"]`). SĐT mới chuẩn hoá và vẫn duy nhất → 409 `PHONE_EXISTS`. Vai trò: NV_TIEP_NHAN, QL_TRUNG_TAM.
+- **E12** `DELETE /api/customers/{id}` – chỉ QL_TRUNG_TAM (khác → 403) → 204. Khách đã có thiết bị → 409 `CUSTOMER_IN_USE` (phiếu là chứng từ, không mất theo – TD-07).
+- **E13** `GET /api/devices/{id}` → 200 `{ deviceId, customerId, serialImei, modelName, purchaseDate, warrantyMonths }`; 404 `DEVICE_NOT_FOUND`.
+- **E14** `PATCH /api/devices/{id}` – `{ "modelName"?, "purchaseDate"? ("" hoặc null = xoá ngày mua), "warrantyMonths"? (0–60) }`. Gửi `serialImei` hoặc `customerId` → 400 (Serial/IMEI và chủ thiết bị không đổi – QT-03). Ngày mua ở tương lai → 400 `PURCHASE_DATE_IN_FUTURE`. Phiếu đã tạo giữ kết quả kiểm tra bảo hành lúc tiếp nhận.
+- **E15** `DELETE /api/devices/{id}` – chỉ QL_TRUNG_TAM → 204. Thiết bị đã có phiếu → 409 `DEVICE_IN_USE` (kể cả khi phiếu vừa được tạo cùng lúc: CSDL chặn bằng khoá ngoại, lớp dữ liệu dịch thành `IN_USE`).
 
 ## 4. Quy tắc validation
 

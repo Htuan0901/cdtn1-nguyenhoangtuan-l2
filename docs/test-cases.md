@@ -17,3 +17,16 @@ tài khoản `nv01`, `ql01` (TT-CT01), mật khẩu `Mekong@2026`.
 | TC-B10-05 | Xử lý lỗi khi tắt backend, có nút Thử lại (checklist Buổi 10) | Đăng nhập `nv01`, đang ở M1 | 1. Ở cửa sổ backend bấm Ctrl + C · 2. Tải lại trang (F5) · 3. Chạy lại `npm start` · 4. Bấm **Thử lại** | — | B2: khung đỏ “Không tải được dữ liệu. Không kết nối được máy chủ API (http://localhost:3000/api)…” + nút **Thử lại**, trang không treo · B4: danh sách hiện lại đầy đủ, không cần đăng nhập lại | Luồng ngoại lệ | Cao |
 
 Ghi chú: test tự động bổ sung – 40 unit test (`npm test`), 5 test repository (`npm run test:repo`), luồng chính qua API (`npm run e2e`).
+
+## Bổ sung Buổi 11 – lỗi hạ tầng (kết quả ở `docs/test-report.md` mục 4)
+
+| Mã | Mục tiêu | Tiền điều kiện | Các bước | Kết quả mong đợi | Loại | Ưu tiên |
+|---|---|---|---|---|---|---|
+| TC-B11-01 | CSDL mất kết nối được báo đúng (BUG-09) | Backend đang chạy, đã đăng nhập | 1. `docker stop smartcrm-pg` · 2. Mở M1 / gọi `GET /api/tickets` · 3. `curl localhost:3000/health` · 4. `docker start smartcrm-pg`, bấm **Thử lại** | B2: 503, “Hệ thống đang gặp sự cố… Mã tra cứu: xxxxxxxx”; log có đúng 1 dòng ERROR cùng mã · B3: `{"db":"DOWN"}` 503 · B4: danh sách hiện lại | Lỗi hạ tầng | Cao |
+| TC-B11-02 | API không chết khi CSDL khởi động lại (BUG-10) | Backend đang chạy, đã gọi API ít nhất một lần | 1. `docker restart smartcrm-pg` (lặp 3 lần) · 2. `curl localhost:3000/health` sau mỗi lần | API vẫn trả `{"status":"OK","db":"OK"}`; log chỉ có dòng WARN “mất một kết nối rảnh tới CSDL” | Lỗi hạ tầng | **Cao** |
+
+## Bổ sung Buổi 12 – màn hình M4 Khách hàng (CRUD)
+
+| Mã | Mục tiêu | Tiền điều kiện | Các bước | Kết quả mong đợi | Loại | Ưu tiên |
+|---|---|---|---|---|---|---|
+| TC-B12-01 | Tìm, sửa, xoá khách hàng trên giao diện; quy tắc do backend kiểm (TD-20) | Đã `npm run seed`; đăng nhập `nv01` | 1. Bấm **Khách hàng** → tìm `zzzz` · 2. Tìm `Lê Bảo Tâm`, mở chi tiết · 3. Nhập SĐT `0901234567` → **Lưu** · 4. Kiểm tra có nút Xoá không · 5. Đăng nhập `ql01`, mở cùng khách → **Xoá khách hàng** | B1: câu giải thích “Không có khách hàng phù hợp…” · B3: chữ đỏ “Số điện thoại đã có hồ sơ khách hàng” (409) · B4: Nhân viên không thấy nút Xoá · B5: chữ đỏ “Khách hàng đã có thiết bị hoặc phiếu bảo hành – không thể xoá” | Dữ liệu sai / phân quyền | Trung bình |
