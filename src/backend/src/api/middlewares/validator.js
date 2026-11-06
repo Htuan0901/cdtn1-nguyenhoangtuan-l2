@@ -68,6 +68,8 @@ const schemas = {
     note: b.note === undefined || (typeof b.note === 'string' && b.note.length <= 500),
   }),
   listTickets: (q) => ({
+    // Express 4 tách ?q=a&q=b thành MẢNG, ?q[x]=1 thành ĐỐI TƯỢNG → chỉ nhận chuỗi (BUG-12)
+    q: q.q === undefined || (typeof q.q === 'string' && q.q.length <= 100),
     from: q.from === undefined || isDate(q.from),
     to: q.to === undefined || isDate(q.to),
     status: q.status === undefined || STATUSES.includes(q.status),

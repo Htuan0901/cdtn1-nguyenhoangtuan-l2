@@ -3,6 +3,28 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const { validate } = require('../../src/backend/src/api/middlewares/validator');
+
+// Gọi middleware validate như Express: trả về lỗi truyền cho next (hoặc undefined nếu hợp lệ)
+function runValidate(name, source, data) {
+  let passed;
+  validate(name, source)({ [source]: data }, {}, (err) => { passed = err; });
+  return passed;
+}
+
+test('TC-43 GET /tickets: q dạng mảng hoặc đối tượng → 400 VALIDATION_ERROR [q], không tới lớp nghiệp vụ (BUG-12)', () => {
+  // Express 4 (query parser "extended"): ?q=a&q=b → ['a','b'];  ?q[x]=1 → { x: '1' }
+  for (const q of [['0901234567', 'BH-000001'], { x: '1' }]) {
+    const err = runValidate('listTickets', 'query', { q });
+    assert.equal(err && err.status, 400);
+    assert.deepEqual(err.fields, ['q']);
+  }
+});
+
+test('TC-44 GET /tickets: q là chuỗi 100 ký tự được nhận, 101 ký tự bị từ chối (biên, BUG-12)', () => {
+  assert.equal(runValidate('listTickets', 'query', { q: 'a'.repeat(100) }), undefined);
+  assert.deepEqual(runValidate('listTickets', 'query', { q: 'a'.repeat(101) }).fields, ['q']);
+});
 
 test('TC-46 không còn mật khẩu / chuỗi kết nối có mật khẩu trong tài liệu và cấu hình đã commit (BUG-11)', () => {
   const ROOT = path.join(__dirname, '..', '..');
