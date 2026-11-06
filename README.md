@@ -16,7 +16,7 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 - **Node.js 20 LTS** (≥ 20.6, dùng `node --env-file` và `fetch` có sẵn; ghim trong `.nvmrc`) và npm 10 – kiểm tra: `node -v`
 - **PostgreSQL 16** (cổng 5432) – chạy bằng **Docker Desktop** (cách dùng trong README này, TD-11) hoặc cài trực tiếp
 - **Git Bash** (Windows) hoặc terminal bất kỳ; trình duyệt Chrome/Edge/Firefox bản mới
-- Biến môi trường: `.env` ở thư mục gốc repo, tạo từ `.env.example` (không commit `.env`) – gồm `DATABASE_URL`, `DB_PASSWORD`, `PORT`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `LOG_LEVEL`
+- Biến môi trường: `.env` ở thư mục gốc repo, tạo từ `.env.example` (không commit `.env`) – gồm `POSTGRES_PASSWORD`, `DATABASE_URL`, `PORT`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `LOG_LEVEL`
 - Thư viện backend: `express` 4, `pg` 8, `jsonwebtoken` 9 – **phiên bản khoá trong `src/backend/package-lock.json`**, cài đúng bản bằng `npm ci`. Giao diện **không cần thư viện** (JavaScript ES modules – TD-13)
 - **Docker Desktop** (Docker Compose v2) – dùng cho PostgreSQL (Cách A), hoặc dựng cả hệ thống bằng 2 lệnh (Cách B)
 - Cổng dùng: **3000** (API), **5173** (giao diện), **5432** (PostgreSQL)
@@ -29,10 +29,10 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 
 | Bước | Lệnh | Kết quả mong đợi |
 |---|---|---|
-| 1 | `git clone --branch v0.2 https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2.git thu-nghiem` | thư mục `thu-nghiem` ở đúng bản nộp Bài tập 2 (tag v0.2) |
+| 1 | `git clone https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2.git thu-nghiem` | thư mục `thu-nghiem` ở bản mới nhất (nhánh main). Bản đã nộp Bài tập 2 là tag `v0.2` – chạy theo README trong tag đó |
 | 2 | `cd thu-nghiem` | vào thư mục gốc repo |
-| 3 | `docker run -d --name smartcrm-pg -e POSTGRES_PASSWORD=123456 -e POSTGRES_DB=smartcrm -p 5432:5432 postgres:16` | `docker ps` thấy `smartcrm-pg` Up. Lần sau chỉ cần `docker start smartcrm-pg` |
-| 4 | `cp .env.example .env` | tạo `.env`; giá trị mặc định khớp lệnh docker ở bước 3 (dùng PostgreSQL cài sẵn thì sửa mật khẩu trong `DATABASE_URL`) |
+| 3 | `cp .env.example .env` | tạo `.env` từ giá trị mẫu. Muốn dùng mật khẩu riêng thì sửa **cả** `POSTGRES_PASSWORD` **và** mật khẩu trong `DATABASE_URL` trước bước 4 (không ghi mật khẩu thật vào tài liệu – TD-21) |
+| 4 | `docker run -d --name smartcrm-pg --env-file .env -e POSTGRES_DB=smartcrm -p 5432:5432 postgres:16` | `docker ps` thấy `smartcrm-pg` Up. Lần sau chỉ cần `docker start smartcrm-pg` |
 | 5 | `cd src/backend` | |
 | 6 | `npm ci` | `added … packages` – cài **đúng** phiên bản trong `package-lock.json` |
 | 7 | `npm run migrate` | `✓ đã chạy 001, 002, 003` – 6 bảng (chạy lại → “bỏ qua”) |

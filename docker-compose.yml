@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: smartcrm
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Thiếu DB_PASSWORD trong .env – chạy cp .env.example .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Thiếu POSTGRES_PASSWORD trong .env – chạy cp .env.example .env}
     volumes:
       - dbdata:/var/lib/postgresql/data      # giữ dữ liệu khi container bị xoá (down -v để xoá hẳn)
     healthcheck:
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: src/backend/Dockerfile
     environment:
-      DATABASE_URL: postgres://postgres:${DB_PASSWORD}@db:5432/smartcrm   # "db" = TÊN DỊCH VỤ, không phải localhost
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/smartcrm   # "db" = TÊN DỊCH VỤ, không phải localhost
       JWT_SECRET: ${JWT_SECRET:?Thiếu JWT_SECRET trong .env}
       PORT: "3000"
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173,http://127.0.0.1:5173}

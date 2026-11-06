@@ -135,7 +135,7 @@ nội dung thiết kế (SRS, Use Case, kiến trúc, ERD, wireframe); các góp
 - **Phản hồi của GV:** (phát sinh khi chạy Sprint 1 trên máy cá nhân – máy chưa cài PostgreSQL)
 - **Quyết định:** BỔ SUNG cách chạy CSDL bằng container `postgres:16` (Docker Desktop), giữ nguyên PostgreSQL 16 và DDL của BT1
 - **Lý do:** Một lệnh `docker run` tạo sẵn database `smartcrm`, cùng phiên bản PostgreSQL 16 như thiết kế, không phải cài đặt và cấu hình dịch vụ trên Windows; xóa container là làm sạch dữ liệu, thuận tiện chạy lại migrate và NFR2. Ứng dụng chỉ đọc `DATABASE_URL` nên không phải sửa mã (NFR6).
-- **Ảnh hưởng:** README mục 2 và mục 3 (thêm Cách A – Docker); `.env` dùng `postgres://postgres:123456@localhost:5432/smartcrm` trên máy phát triển. Không đổi mã nguồn, migration hay kiến trúc 4 lớp.
+- **Ảnh hưởng:** README mục 2 và mục 3 (thêm Cách A – Docker); chuỗi kết nối khai báo trong `.env` (chép từ `.env.example`, không commit; không ghi mật khẩu vào tài liệu – TD-21). Không đổi mã nguồn, migration hay kiến trúc 4 lớp.
 
 ## Trước Bài tập 1 – thay đổi so với bài Buổi 2 và Buổi 4
 
