@@ -154,5 +154,13 @@ Mở `.drawio` bằng https://app.diagrams.net (File → Open from → Device).
 ## 8. Khai báo sử dụng công cụ AI
 Xem [`docs/ai-disclosure.md`](docs/ai-disclosure.md).
 
-## 9. Quy ước commit
-`<type>(<scope>): <mô tả>` – ví dụ `docs(srs): …`, `feat(ticket): …`, `fix(sla): …`, `test(sla): …`, `chore(backend): …`. Mỗi commit một đơn vị công việc, hệ thống vẫn chạy được sau mỗi commit.
+## 9. Quy ước commit (TD-22)
+`<type>(<scope>): <mô tả việc đã làm>` – type là một trong `feat` · `fix` · `docs` · `test` · `build` · `chore` · `refactor` · `style` · `perf` · `ci`; mô tả ≥ 10 ký tự, nói **làm gì, ở đâu**.
+
+| Không đạt | Đạt |
+|---|---|
+| `Add files via upload`, `Update README.md`, `Delete …`, `fix`, `update` | `docs(readme): thêm bước tạo .env trước khi chạy docker` |
+| `sửa lỗi` | `fix(sla): bỏ Chủ nhật khi tính hạn cam kết lúc tiếp nhận tối thứ Bảy` |
+
+- Mỗi commit một đơn vị công việc, hệ thống vẫn chạy được sau mỗi commit; **không tải tệp lên bằng giao diện web GitHub** (tạo commit tên mặc định).
+- Bật kiểm tra tự động một lần sau khi clone: `git config core.hooksPath .githooks` – hook `.githooks/commit-msg` từ chối thông điệp sai mẫu.

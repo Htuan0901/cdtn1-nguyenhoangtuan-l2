@@ -1,0 +1,17 @@
+#!/bin/sh
+# Kiểm tra thông điệp commit theo quy ước README mục 9 (TD-22).
+# Bật một lần sau khi clone:  git config core.hooksPath .githooks
+first=$(head -n 1 "$1" | tr -d '\r')
+case "$first" in
+  Merge\ *|Revert\ *|fixup!*|squash!*) exit 0 ;;
+esac
+pattern='^(feat|fix|docs|test|build|chore|refactor|style|perf|ci)(\([a-z0-9._-]+\))?!?: .{10,}$'
+if printf '%s\n' "$first" | grep -Eq "$pattern"; then
+  exit 0
+fi
+echo "✗ Thông điệp commit chưa đúng quy ước (README mục 9):" >&2
+echo "    $first" >&2
+echo "  Mẫu:  type(scope): mô tả việc đã làm  (≥ 10 ký tự)" >&2
+echo "  type: feat | fix | docs | test | build | chore | refactor | style | perf | ci" >&2
+echo "  Ví dụ: docs(readme): thêm bước tạo .env trước khi chạy docker" >&2
+exit 1
