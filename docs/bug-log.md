@@ -15,9 +15,9 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | BUG-08 | Major | Mở giao diện bằng 127.0.0.1 → CORS chặn mọi lời gọi API | Buổi 11 | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) | TC-28 |
 | BUG-09 | Major | CSDL mất kết nối → 500 không mã tra cứu, log không truy vết được | Buổi 11 | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) | TC-30, TC-33 |
 | BUG-10 | **Critical** | CSDL khởi động lại khi API đang chạy → API chết hẳn | Buổi 11 | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) | TC-34 |
-| BUG-11 | **Critical** | Mật khẩu PostgreSQL ghi trong README, TD-11 và `.env.example` của repo public | Buổi 14 – phản hồi BT2, ST-11 | COMMIT_BUG-11 | ST-11, TC-46 |
-| BUG-12 | Minor | `GET /api/tickets?q=a&q=b` (hoặc `q[x]=1`) trả 500 thay vì 400 | Buổi 14 – ST-08 | COMMIT_BUG-12 | ST-08, TC-43, TC-44 |
-| BUG-13 | Minor | Body JSON lớn hơn 100 KB trả 500 thay vì 413 | Buổi 14 – ST-09 | COMMIT_BUG-13 | ST-09, TC-45 |
+| BUG-11 | **Critical** | Mật khẩu PostgreSQL ghi trong README, TD-11 và `.env.example` của repo public | Buổi 14 – phản hồi BT2, ST-11 | [d8334bc](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d8334bc212de71035789147bb00d26e12ae4c8be) | ST-11, TC-46 |
+| BUG-12 | Minor | `GET /api/tickets?q=a&q=b` (hoặc `q[x]=1`) trả 500 thay vì 400 | Buổi 14 – ST-08 | [e4632c0](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/e4632c08c45b0abf3bad5e49d344f6f269bc893c) | ST-08, TC-43, TC-44 |
+| BUG-13 | Minor | Body JSON lớn hơn 100 KB trả 500 thay vì 413 | Buổi 14 – ST-09 | [3674a17](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/3674a17ed0e32e8e4bcbb85b57fc66169d5a58c5) | ST-09, TC-45 |
 
 ---
 
@@ -30,7 +30,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | Mở repo ở cửa sổ ẩn danh, tìm `postgres://` hoặc `POSTGRES_PASSWORD` → thấy mật khẩu; hoặc `npm run st -- ST-11` trên commit trước khi sửa. Tái lập **3/3 lần** |
 | 5. Nguyên nhân | Khi thêm Cách chạy bằng Docker (TD-11), em chép thẳng mật khẩu PostgreSQL đang dùng trên máy vào lệnh `docker run` của README, vào `.env.example` và vào TD-11 thay vì để lệnh đọc từ `.env`; không có bước kiểm nào chặn mật khẩu trong tài liệu |
 | 6. Cách sửa | **Đổi khoá trước:** đổi mật khẩu PostgreSQL trên máy (`ALTER USER postgres PASSWORD …`), cập nhật `.env` (không commit). Sau đó gỡ khỏi repo: `docker run --env-file .env` thay cho mật khẩu viết trong lệnh; `DB_PASSWORD` → `POSTGRES_PASSWORD` dùng chung cho `docker run` và `docker compose`; `.env.example` chỉ còn giá trị mẫu `doi_mat_khau_nay`; TD-11 bỏ chuỗi kết nối. Lịch sử commit cũ vẫn chứa mật khẩu cũ nên mật khẩu đó coi như đã lộ và không dùng lại (không viết lại lịch sử để giữ tag `v0.2` – TD-21) |
-| 7. Commit và xác nhận | COMMIT_BUG-11 · ST-11 lần 2: **0 vị trí** · TC-46 (quét tài liệu trong `npm test`) FAIL trên mã cũ, PASS sau khi sửa · clone mới làm đúng README bước 3 – 4 vẫn dựng được CSDL |
+| 7. Commit và xác nhận | [d8334bc](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d8334bc212de71035789147bb00d26e12ae4c8be) · ST-11 lần 2: **0 vị trí** · TC-46 (quét tài liệu trong `npm test`) FAIL trên mã cũ, PASS sau khi sửa · clone mới làm đúng README bước 3 – 4 vẫn dựng được CSDL |
 
 ### BUG-12 · Minor – Tham số `q` trùng tên làm `GET /api/tickets` trả 500
 | Dòng | Nội dung |
@@ -41,7 +41,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | `npm start` → `npm run st -- ST-08` (hoặc curl với token của `nv01`). Tái lập **3/3 lần** |
 | 5. Nguyên nhân | Express 4 (query parser “extended”) tách `?q=a&q=b` thành MẢNG và `?q[x]=1` thành ĐỐI TƯỢNG. Schema `listTickets` của validator không kiểm `q` nên giá trị không phải chuỗi đi thẳng vào lớp ③; `ticketService.listTickets` (dòng 56) gọi `filters.q.trim()` → TypeError. Khoanh vùng: ngăn xếp lỗi dừng ở `ticketService.js:56`, request đã qua validator |
 | 6. Cách sửa | `api/middlewares/validator.js`: `listTickets` kiểm `q` là chuỗi ≤ 100 ký tự (cùng giới hạn với `listCustomers`) → 400 VALIDATION_ERROR [q]; lớp ③ không đổi |
-| 7. Commit và xác nhận | COMMIT_BUG-12 · ST-08 lần 2: 400 VALIDATION_ERROR [q] cả hai bước · TC-43, TC-44 FAIL trên mã cũ, PASS sau khi sửa · `npm test` 61/61 |
+| 7. Commit và xác nhận | [e4632c0](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/e4632c08c45b0abf3bad5e49d344f6f269bc893c) · ST-08 lần 2: 400 VALIDATION_ERROR [q] cả hai bước · TC-43, TC-44 FAIL trên mã cũ, PASS sau khi sửa · `npm test` 61/61 |
 
 ### BUG-13 · Minor – Body vượt 100 KB trả 500 thay vì 413
 | Dòng | Nội dung |
@@ -52,7 +52,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | 4. Cách tái lập | `npm start` → `npm run st -- ST-09`. Tái lập **3/3 lần** |
 | 5. Nguyên nhân | `app.js` đặt `express.json({ limit: '100kb' })`; khi vượt, body-parser ném lỗi có `type: 'entity.too.large'`, `status: 413`. `errorHandler` chỉ nhận diện `entity.parse.failed` và `AppError`, mọi lỗi khác rơi vào nhánh lỗi hệ thống → 500 |
 | 6. Cách sửa | `api/middlewares/errorHandler.js`: lỗi `entity.too.large` → **413 PAYLOAD_TOO_LARGE** “Dữ liệu gửi lên quá lớn (tối đa 100 KB)”, log mức INFO như các lỗi do người gửi |
-| 7. Commit và xác nhận | COMMIT_BUG-13 · ST-09 lần 2: 413 PAYLOAD_TOO_LARGE, customer +0 · TC-45 FAIL trên mã cũ, PASS sau khi sửa · `npm test` 61/61 |
+| 7. Commit và xác nhận | [3674a17](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/3674a17ed0e32e8e4bcbb85b57fc66169d5a58c5) · ST-09 lần 2: 413 PAYLOAD_TOO_LARGE, customer +0 · TC-45 FAIL trên mã cũ, PASS sau khi sửa · `npm test` 61/61 |
 
 ---
 
