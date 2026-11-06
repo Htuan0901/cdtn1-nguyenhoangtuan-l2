@@ -1,19 +1,48 @@
-# Test Report – Smart CRM · Luồng L2 (Bài tập 2)
+# Test Report – Smart CRM · Luồng L2 (Buổi 14 → Bài tập 3)
 
-Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 · track SE · Kế hoạch: `docs/test-plan.md`
+Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 · track SE · Kế hoạch: `docs/test-plan.md` · Lỗi: `docs/bug-log.md`
 
 ## 1. Tổng hợp lần chạy
-| Lệnh (trong `src/backend`) | Kết quả |
-|---|---|
-| `npm test` | **57/57 PASS** (`# tests 57 · # pass 57 · # fail 0`) |
-| `npm run test:repo` | **8/8 PASS** trên PostgreSQL 16 |
-| `npm run e2e` | **10/10 bước**, “luồng chính chạy END-TO-END … không lỗi” |
-| `npm run crud` | **17/17 bước** – CRUD Khách hàng + Thiết bị, kể cả các trường hợp bị chặn |
-| 8 test case thủ công trên giao diện | **8/8 PASS** – `docs/test-execution.md`, mục 4 dưới đây |
+Môi trường: Windows 11 + Git Bash · Node.js 20 · PostgreSQL 16 (Docker). CSDL dựng mới (`npm run migrate` + `npm run seed`: 667 khách hàng, 293 thiết bị, 122 phiếu) rồi chạy **lần 1 → sửa bug → lần 2** trên cùng CSDL, nên số đếm của lần 2 nối tiếp lần 1.
 
-Môi trường: Node.js 20 LTS · PostgreSQL 16 (Docker) · dữ liệu mẫu thật nạp bằng `npm run seed`.
+| Lần chạy | Mã nguồn | Lệnh (trong `src/backend`) | Kết quả | Ảnh |
+|---|---|---|---|---|
+| Lần 1 | commit `test(system): 12 test case hệ thống…` – trước khi sửa | `npm run st` | **9/12 PASS · FAIL: ST-08, ST-09, ST-11** | `docs/screenshots/ST-lan1.png` |
+| Lần 2 | sau commit sửa BUG-11, BUG-12, BUG-13 | `npm run st` | **12/12 PASS** | `docs/screenshots/ST-01.png` … `ST-12.png` |
+| Lần 2 | như trên | `npm test` | **61/61 PASS** (57 của BT2 + TC-43…TC-46) | `docs/screenshots/npm-test.png` |
+| Lần 2 | như trên | `npm run test:repo` · `npm run e2e` · `npm run crud` | 8/8 · 10/10 bước · 17/17 bước | `docs/screenshots/tich-hop.png` |
 
-## 2. Unit test (`npm test`)
+Ba FAIL của lần 1 được ghi trung thực, gỡ theo bốn bước và ghi `docs/bug-log.md` ngay khi gặp: ST-11 → **BUG-11 (Critical)**, ST-08 → **BUG-12**, ST-09 → **BUG-13**; mỗi bug một commit `fix(…): … (BUG-xx)`. Chạy lại một test case bất kỳ: `npm run st -- ST-xx`.
+
+## 2. 12 test case hệ thống (`npm run st`, kết quả thực tế của lần chạy)
+Năm loại: luồng đúng 2 · giá trị biên 3 (ST-03 / ST-04 hai bên ranh giới) · dữ liệu sai 4 · bảo mật 2 · tái lập 1. Mỗi test case tự tạo khách hàng, thiết bị mới làm tiền điều kiện; SĐT và Serial thay đổi theo lần chạy (xem ảnh).
+
+| Mã · loại | Mục tiêu (truy vết) | Ưu tiên | Tiền điều kiện | Các bước | Kết quả mong đợi | Kết quả thực tế | Kết quả · ảnh |
+|---|---|---|---|---|---|---|---|
+| ST-01 · Luồng đúng | Tạo phiếu cho thiết bị còn bảo hành (UC04 · QT-05 · QT-A1 · QT-15) | Cao | Khách hàng mới (SĐT 09…) · thiết bị mới mua 30 ngày trước, BH 12 tháng · đăng nhập `nv01` | `POST /api/tickets` {customerId, deviceId, issueDesc, categoryCode: PIN}, không gửi priority | 201 · MOI · CON_BAO_HANH · ưu tiên TRUNG_BINH (mặc định nhóm PIN) · SĐT che `09x****xxx` · ticket +1 · log +1 | 201 · MOI · CON_BAO_HANH · TRUNG_BINH · BH-000129/2026 · SĐT `093****801` · ticket 128 → 129 (+1) · log 129 → 130 (+1) | PASS · `ST-01.png` |
+| ST-02 · Luồng đúng | Thiếu ngày mua → Chờ xác minh → Quản lý chấp nhận (UC04-8a · UC07 · QT-06) | Cao | Khách hàng mới · thiết bị mới KHÔNG có ngày mua | 1. `nv01`: `POST /api/tickets` · 2. `ql01`: `POST /api/tickets/{mã}/review` {CHAP_NHAN, note} | B1: 201 CHO_XAC_MINH / CHUA_XAC_MINH · B2: 200 MOI / CON_BAO_HANH, lịch sử 2 dòng · ticket +1 · log +2 | B1: 201 CHO_XAC_MINH / CHUA_XAC_MINH · B2: 200 MOI / CON_BAO_HANH, lịch sử 2 dòng · ticket 129 → 130 (+1) · log 130 → 132 (+2) | PASS · `ST-02.png` |
+| ST-03 · Giá trị biên | Tiếp nhận ĐÚNG ngày hết hạn bảo hành → còn bảo hành (QT-05, phía trong ranh giới) | Cao | Thiết bị mua **đúng ngày này năm trước**, BH 12 tháng → hết hạn = hôm nay | `POST /api/tickets` hôm nay | 201 · CON_BAO_HANH · MOI | 201 · CON_BAO_HANH · MOI · BH-000131/2026 | PASS · `ST-03.png` |
+| ST-04 · Giá trị biên | Tiếp nhận sau hạn 1 ngày → hết bảo hành (QT-05, phía ngoài ranh giới) | Cao | Thiết bị mua **ngày này năm trước trừ 1 ngày** → hết hạn = hôm qua | `POST /api/tickets` hôm nay | 201 · HET_BAO_HANH · phiếu vẫn MOI | 201 · HET_BAO_HANH · MOI · BH-000132/2026 | PASS · `ST-04.png` |
+| ST-05 · Giá trị biên | Mô tả lỗi 5.000 ký tự nhận, 5.001 ký tự từ chối (api-contract E7) | Trung bình | Khách hàng, thiết bị mới | 1. `POST /api/tickets` issueDesc 5.000 ký tự · 2. issueDesc 5.001 ký tự | B1: 201 · B2: 400 VALIDATION_ERROR [issueDesc] · ticket +1 (chỉ B1) | B1: 201 · B2: 400 VALIDATION_ERROR [issueDesc] · ticket 132 → 133 (+1) | PASS · `ST-05.png` |
+| ST-06 · Dữ liệu sai | Trường bắt buộc trống, sai enum → 400 nêu rõ trường, không ghi gì (UC04-10a) | Cao | Khách hàng, thiết bị hợp lệ | `POST /api/tickets` {issueDesc: "   ", categoryCode: "LOA"} | 400 VALIDATION_ERROR [issueDesc, categoryCode] · ticket +0 · log +0 | 400 VALIDATION_ERROR [issueDesc, categoryCode] · ticket 133 → 133 (+0) · log 135 → 135 (+0) | PASS · `ST-06.png` |
+| ST-07 · Dữ liệu sai | Id / mã không tồn tại → 404, không phải 500 | Trung bình | Không có khách id 2147483647, 999999; không có phiếu BH-999999/2099 | 1. `POST /api/tickets` customerId 2147483647 · 2. `GET /api/customers/999999` · 3. `GET /api/tickets/BH-999999%2F2099` | B1: 404 CUSTOMER_NOT_FOUND · B2: 404 CUSTOMER_NOT_FOUND · B3: 404 TICKET_NOT_FOUND · ticket +0 | B1: 404 CUSTOMER_NOT_FOUND · B2: 404 CUSTOMER_NOT_FOUND · B3: 404 TICKET_NOT_FOUND · ticket 133 → 133 (+0) | PASS · `ST-07.png` |
+| ST-08 · Dữ liệu sai | Tham số `q` dạng mảng / đối tượng → 400, không phải 500 | Trung bình | Đăng nhập `nv01` | 1. `GET /api/tickets?q=0901234567&q=BH-000001` · 2. `GET /api/tickets?q[x]=1` | B1: 400 VALIDATION_ERROR [q] · B2: 400 VALIDATION_ERROR [q] | **Lần 1: B1 500 LOI_HE_THONG · B2 500 LOI_HE_THONG → FAIL → BUG-12.** Lần 2: B1 400 VALIDATION_ERROR [q] · B2 400 VALIDATION_ERROR [q] | Lần 1 FAIL · lần 2 PASS · `ST-08.png` |
+| ST-09 · Dữ liệu sai | Body lớn hơn 100 KB → 413, không phải 500 | Thấp | Đăng nhập `nv01`; giới hạn body JSON 100 KB | `POST /api/customers` fullName 120.000 ký tự (≈ 117 KB) | 413 PAYLOAD_TOO_LARGE · customer +0 | **Lần 1: 500 LOI_HE_THONG · customer 673 → 673 (+0) → FAIL → BUG-13.** Lần 2: 413 PAYLOAD_TOO_LARGE · customer 680 → 680 (+0) | Lần 1 FAIL · lần 2 PASS · `ST-09.png` |
+| ST-10 · Bảo mật | Thiếu / giả token → 401; khác trung tâm, sai vai trò → 403 (QT-14, NFR4) | Cao | `nv01` (TT-CT01) vừa tạo một phiếu; `nv02` thuộc TT-CT02 | 1. `GET /api/tickets` không token · 2. token giả alg "none" · 3. `nv02` xem phiếu của TT-CT01 · 4. `nv01` `DELETE /api/customers/{id}` | B1: 401 · B2: 401 · B3: 403 FORBIDDEN · B4: 403 FORBIDDEN · customer +0 | B1: 401 UNAUTHORIZED · B2: 401 UNAUTHORIZED · B3: 403 FORBIDDEN (phiếu BH-000134/2026) · B4: 403 FORBIDDEN · customer 681 → 681 (+0) | PASS · `ST-10.png` |
+| ST-11 · Bảo mật | Không có mật khẩu / chuỗi kết nối có mật khẩu trong tài liệu repo (phản hồi BT2) | Cao | Quét 19 tệp đã commit: README, `docs/**/*.md`, `docker-compose.yml`, `.env.example` | Tìm `postgres://user:<mật_khẩu>@` và biến POSTGRES_PASSWORD / DB_PASSWORD được gán giá trị (bỏ qua `${BIẾN}` và giá trị mẫu của `.env.example`) | 0 vị trí lộ mật khẩu | **Lần 1: 4 vị trí – README.md:34, .env.example:4, .env.example:6, docs/thay-doi-thiet-ke.md:138 → FAIL → BUG-11.** Lần 2: 0 vị trí | Lần 1 FAIL · lần 2 PASS · `ST-11.png` |
+| ST-12 · Tái lập | Chạy lại migrate + seed → không lỗi, không nhân đôi (C5) | Cao | CSDL đã migrate + seed | Chạy lại `scripts/migrate.js` rồi `scripts/seed-mau.js`; đếm 6 bảng trước/sau | migrate mã thoát 0, bỏ qua 3 migration · seed mã thoát 0 · 6 bảng +0 | migrate thoát 0, bỏ qua 3 · seed thoát 0 · customer +0 · device +0 · ticket +0 · ticket_status_log +0 · issue_category +0 · staff +0 | PASS · `ST-12.png` |
+
+## 3. Test hồi quy cho bug của Buổi 14 (`npm test`, không cần CSDL)
+| Mã | Tệp | Hành vi được kiểm | Loại | Trên mã cũ | Sau khi sửa |
+|---|---|---|---|---|---|
+| TC-43 | `buoi14.test.js` | `q` dạng mảng `['0901234567','BH-000001']` hoặc đối tượng `{x:'1'}` → 400 VALIDATION_ERROR [q] (BUG-12) | Dữ liệu sai | FAIL | PASS |
+| TC-44 | `buoi14.test.js` | `q` 100 ký tự được nhận, 101 ký tự bị từ chối (BUG-12) | Biên | FAIL | PASS |
+| TC-45 | `buoi14.test.js` | lỗi `entity.too.large` → 413 PAYLOAD_TOO_LARGE, đúng một dòng log mức INFO (BUG-13) | Dữ liệu sai | FAIL | PASS |
+| TC-46 | `buoi14.test.js` | quét README, `docs/**/*.md`, `docker-compose.yml`, `.env.example`: không có mật khẩu (BUG-11) | Bảo mật | FAIL (4 vị trí) | PASS |
+
+## 4. Phụ lục – chi tiết test tự động (từ Bài tập 2, vẫn chạy trong `npm test`)
+
+### A. Unit test (`npm test`) – 57 test của BT2
 | Mã | Tệp | Hành vi được kiểm (tên test) | Loại | Kết quả |
 |---|---|---|---|---|
 | TC-01 | `ticketService.test.js` | tạo phiếu còn bảo hành: trạng thái Mới, mã BH-000007/2026, 1 dòng lịch sử | Luồng đúng | PASS |
@@ -60,7 +89,7 @@ Môi trường: Node.js 20 LTS · PostgreSQL 16 (Docker) · dữ liệu mẫu th
 | TC-42 | `buoi12.test.js` | khoá ngoại bị vi phạm lúc xoá (có người vừa tạo phiếu) → 409, không phải 500 | Lỗi đồng thời | PASS |
 | AC, QT | `slaPolicy`, `warrantyPolicy`, `phonePolicy` | 15 test: AC1.1 – "+84 901 234 567" → 0901234567; Dạng 84…, dấu chấm, gạch nối đều chuẩn hoá được; AC1.3 – "09012" không hợp lệ; QT-15 – che 4 chữ số giữa; AC5.1 – Trung bình, tiếp nhận thứ Sáu 02/10/2026 10:00 → hạn 06/10/2026 10:00 (bỏ Chủ nhật); AC5.2 – đổi sang Cao → hạn 03/10/2026 10:00 (thứ Bảy vẫn là ngày làm việc); Thấp 120 giờ từ thứ Sáu 13:40 → thứ Năm 08/10/2026 13:40; Tiếp nhận thứ Bảy 20:00, Cao → Chủ nhật không tính → thứ Hai 20:00; NFR6 – đổi ngưỡng bằng cấu hình, không sửa code; Mức ưu tiên không hợp lệ → báo lỗi; AC4.1 – mua 15/03/2026, 12 tháng → Còn bảo hành; AC4.2 – không có ngày mua → Chưa xác minh; Mua 10/01/2024, 12 tháng → Hết bảo hành; Ngày cuối cùng còn bảo hành vẫn tính là còn (≤); Cộng tháng giữ ngày cuối tháng hợp lệ (31/01 + 1 tháng → 28/02) | Đúng / biên / sai | PASS |
 
-## 3. Test repository (`npm run test:repo`, CSDL thật, mỗi test BEGIN … ROLLBACK)
+### B. Test repository (`npm run test:repo`, CSDL thật, mỗi test BEGIN … ROLLBACK)
 | Mã | Hành vi được kiểm | Liên quan | Kết quả |
 |---|---|---|---|
 | TR-01 | insert khách rồi findByPhone trả đúng dòng; SĐT trùng bị UNIQUE chặn | QT-01 | PASS |
@@ -72,7 +101,7 @@ Môi trường: Node.js 20 LTS · PostgreSQL 16 (Docker) · dữ liệu mẫu th
 | TR-07 | deviceRepository.update: ngày mua undefined giữ nguyên, null xoá; model, số tháng đổi đúng | QT-05 | PASS |
 | TR-08 | xoá thiết bị đã có phiếu bị khoá ngoại chặn (→ IN_USE); thiết bị chưa có phiếu xoá được | TD-07, TD-20 | PASS |
 
-## 4. Kiểm thử tích hợp và thủ công
+### C. Kiểm thử tích hợp và thủ công (BT2)
 | Mã | Các bước | Kết quả mong đợi | Kết quả thực tế | P/F |
 |---|---|---|---|---|
 | E2E | `npm run e2e`: đăng nhập → tra cứu khách (dữ liệu mẫu) → Serial chưa có (404) → ghi nhận thiết bị (201) → danh mục → tạo phiếu (201) → chi tiết → quản lý đăng nhập → xét duyệt (200) → danh sách | 10/10 bước đúng mã HTTP | 10/10 | PASS |
@@ -86,6 +115,6 @@ Môi trường: Node.js 20 LTS · PostgreSQL 16 (Docker) · dữ liệu mẫu th
 | CRUD | `npm run crud`: tạo/đọc/sửa/xoá khách hàng và thiết bị; SĐT trùng 409, sửa Serial 400, NV xoá 403, xoá khi đang dùng 409, đọc sau xoá 404 | 17/17 bước đúng mã HTTP, không để lại dữ liệu | 17/17 | PASS |
 | TC-B12-01 | M4: tìm khách, rỗng, sửa SĐT trùng, Quản lý xoá khách đang có thiết bị | câu giải thích khi rỗng; chữ đỏ 409; NV không thấy nút xoá | đúng | PASS |
 
-## 5. Ghi chú về tính trung thực
+### D. Ghi chú về tính trung thực (BT2)
 - TC-26, TC-27, TC-28 được viết **trước** khi sửa và **FAIL** trên mã cũ, sau khi sửa thì PASS (BUG-06, BUG-07, BUG-08). TC-29 FAIL khi chạy trên `ticketService.js` của commit 436e3a8 (trước BUG-03); TC-34 FAIL khi chạy trên `db.js` của commit 8c62fff (trước BUG-10). TC-30 … TC-33 kiểm hành vi mới của logger và middleware lỗi (BUG-09) nên được viết cùng lúc với mã.
 - Trước Buổi 11, API chết khi CSDL khởi động lại (BUG-10, Critical) – không bộ unit test nào phát hiện vì lỗi chỉ xuất hiện khi chạy cả hệ thống với CSDL thật; phát hiện bằng kiểm thử thủ công TC-B11-02.

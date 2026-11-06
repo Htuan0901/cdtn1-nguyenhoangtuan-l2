@@ -3,6 +3,28 @@
 > Ghi theo mẫu Buổi 8: mỗi thay đổi có mã TD-xx và đủ bốn dòng **phản hồi – quyết định – lý do – ảnh hưởng**.
 > File được nối tiếp khi nhận phản hồi BT2, BT3.
 
+## Sau phản hồi Bài tập 2 – Buổi 14 (ngày 06/11/2026)
+
+Phản hồi BT2: TC3 10,0 · TC4 9,3 · mục kiểm chứng bảng 4.2 **đạt đủ**. Hai góp ý trừ điểm ở TC4 đều có quyết định dưới đây (TD-21, TD-22); TD-23 là thay đổi của Buổi 14.
+
+### TD-21 Không ghi chuỗi kết nối có mật khẩu vào tài liệu trong repo
+- **Phản hồi của GV:** “Không ghi chuỗi kết nối có mật khẩu (kể cả mật khẩu máy cá nhân) vào tài liệu trong repo.” – TD-11 ghi chuỗi kết nối kèm mật khẩu PostgreSQL trên máy em; README bước 3 ghi mật khẩu đó trong lệnh `docker run`.
+- **Quyết định:** SỬA – ghi thành **BUG-11 (Critical)** trong `docs/bug-log.md` vì repo public. **Đổi khoá trước:** đổi mật khẩu PostgreSQL trên máy phát triển (`ALTER USER postgres PASSWORD …`), rồi mới gỡ khỏi repo. Mật khẩu chỉ còn ở `.env.example` dưới dạng **giá trị mẫu** (`doi_mat_khau_nay`) và trong `.env` của từng máy (không commit). Lệnh `docker run` đọc mật khẩu bằng `--env-file .env` nên README không chứa mật khẩu; biến `DB_PASSWORD` đổi tên thành `POSTGRES_PASSWORD` để `docker run` và `docker compose` dùng chung một biến. TD-11 bỏ chuỗi kết nối.
+- **Lý do:** Repo public – mật khẩu ghi trong tài liệu là mật khẩu lộ, người dùng hay dùng lại mật khẩu ở nơi khác. Một nguồn giá trị duy nhất (`.env`) cũng tránh lệch mật khẩu giữa lệnh docker và `DATABASE_URL`. Mật khẩu cũ vẫn còn trong lịch sử commit nên coi như đã lộ: không dùng lại ở bất kỳ đâu; không viết lại lịch sử để giữ nguyên tag `v0.2` đã chấm.
+- **Ảnh hưởng:** `.env.example`, `docker-compose.yml`, README mục 2 – 3 (đổi thứ tự: tạo `.env` ở bước 3, `docker run --env-file .env` ở bước 4), TD-11. Mã nguồn không đổi (backend vẫn chỉ đọc `DATABASE_URL`). Máy đã có `.env` cũ: thêm dòng `POSTGRES_PASSWORD=` nếu chạy `docker compose`. Chặn tái phát: TC-46 (`npm test`) và ST-11 (`npm run st`) quét README, `docs/**/*.md`, `docker-compose.yml`, `.env.example` – có mật khẩu là FAIL.
+
+### TD-22 Thông điệp commit theo một quy ước, có kiểm tra tự động
+- **Phản hồi của GV:** “Một số commit thông điệp còn chung chung” – 12/41 commit (tải tệp bằng giao diện web GitHub: `Add files via upload`, `Delete …`, `Create README.md`, ngày 02 – 19/10).
+- **Quyết định:** BỔ SUNG quy ước ở README mục 9 (ví dụ đạt / không đạt) và hook `.githooks/commit-msg` từ chối thông điệp không theo mẫu `type(scope): mô tả`; không tải tệp lên bằng giao diện web nữa.
+- **Lý do:** Lịch sử commit là nhật ký thay đổi: đọc `git log` phải biết mỗi commit làm gì. Không viết lại 12 commit cũ (`rebase` + `push --force`) vì sẽ đổi mã của mọi commit sau, làm hỏng tag `v0.2` và các liên kết commit trong `docs/bug-log.md`.
+- **Ảnh hưởng:** README mục 9, `.githooks/commit-msg`, `.gitattributes` (hook giữ xuống dòng LF). Từ commit này trở đi mọi thông điệp theo quy ước; mỗi bug một commit `fix(phạm-vi): … (BUG-xx)`.
+
+### TD-23 Test hệ thống chạy qua API (`npm run st`) và CI trên GitHub Actions
+- **Phản hồi của GV:** (Buổi 14) Test Report 10 – 12 test case CHẠY THẬT, đủ năm loại, kết quả thực tế cụ thể (mã HTTP, đếm bản ghi trước/sau), giảng viên chọn ngẫu nhiên một test case để chạy lại tại chỗ; khuyến khích CI.
+- **Quyết định:** BỔ SUNG `scripts/system-test.js` – 12 test case ST-01…ST-12 (luồng đúng 2 · biên 3 · dữ liệu sai 4 · bảo mật 2 · tái lập 1); mỗi test case tự dựng tiền điều kiện (khách hàng, thiết bị mới), gọi API thật, đếm bản ghi trước/sau và in đủ các cột của Test Report; chạy một test case bằng `npm run st -- ST-xx`. Thêm `.github/workflows/ci.yml`.
+- **Lý do:** Unit test dùng repository giả không bắt được lỗi ở ranh giới HTTP (BUG-12, BUG-13 chỉ lộ ra khi gọi API thật với Express). Kết quả in ra là kết quả thực tế của lần chạy, không chép từ cột mong đợi; chạy lại được bất kỳ lúc nào nên giảng viên kiểm chứng tại chỗ được. CI chạy lại mọi thứ trên máy sạch sau mỗi lần push.
+- **Ảnh hưởng:** `scripts/system-test.js`, `package.json` (script `st`), `tests/backend/buoi14.test.js` (TC-43…TC-46), `docs/test-plan.md`, `docs/test-report.md`, `docs/screenshots/`, `.github/workflows/ci.yml`. Không đổi kiến trúc 4 lớp.
+
 ## Buổi 12: hoàn thiện tích hợp – nộp Bài tập 2 (ngày 30/10/2026)
 
 ### TD-20 Đủ CRUD cho Khách hàng và Thiết bị; thêm màn hình M4 Khách hàng

@@ -37,7 +37,7 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 | 6 | `npm ci` | `added … packages` – cài **đúng** phiên bản trong `package-lock.json` |
 | 7 | `npm run migrate` | `✓ đã chạy 001, 002, 003` – 6 bảng (chạy lại → “bỏ qua”) |
 | 8 | `npm run seed` | nạp **dữ liệu mẫu thật** `data/mau/*.csv`: 378 + 286 khách hàng, 290 thiết bị, 120 phiếu; chạy lại không nhân đôi |
-| 9 | `npm test` | `# tests 57` `# pass 57` `# fail 0` (không cần CSDL) |
+| 9 | `npm test` | `# tests 61` `# pass 61` `# fail 0` (không cần CSDL) |
 | 10 | `npm start` | `Smart CRM L2 API chạy tại http://localhost:3000` – **để nguyên cửa sổ này** |
 
 **Cửa sổ terminal 2 – giao diện** (mở Git Bash mới tại thư mục gốc repo)
@@ -64,6 +64,7 @@ Tài khoản mẫu (mật khẩu chung **`Mekong@2026`**, chỉ dùng trên máy
 | 15 | `npm run e2e` | luồng chính 10/10 bước: đăng nhập → tra cứu khách → ghi nhận thiết bị → tạo phiếu → chi tiết → xét duyệt → danh sách – `KẾT LUẬN: … không lỗi` |
 | 16 | `npm run test:repo` | 8 test repository trên PostgreSQL thật: `# pass 8` (không để lại dữ liệu) |
 | 17 | `npm run crud` | CRUD đủ 4 thao tác cho Khách hàng và Thiết bị qua API: `17/17 bước`, tự dọn dữ liệu thử |
+| 18 | `npm run st` | **12 test case hệ thống** (Buổi 14 – `docs/test-report.md`): mỗi test case in tiền điều kiện, bước, mong đợi, thực tế (mã HTTP, đếm bản ghi trước/sau) – `TỔNG: 12/12 PASS`. Chạy một test case: `npm run st -- ST-05` |
 
 Lệnh khác (tuỳ chọn): `npm run demo` (11 tình huống API) · `npm run nfr2` (1.000 yêu cầu đồng thời) · `npm run token -- nv01` (JWT cho Postman/curl).
 
@@ -108,13 +109,15 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 
 ```
 ├── README.md · .env.example · .gitignore · .nvmrc · docker-compose.yml · .dockerignore
+├── .github/workflows/ci.yml                ← CI: npm test, test:repo, e2e, crud, st (TD-23)
+├── .githooks/commit-msg                    ← kiểm tra thông điệp commit (TD-22)
 ├── BT1_2374802010542_NguyenHoangTuan.pdf   ← BT1 (cập nhật sau phản hồi)
 ├── data/mau/                               ← dữ liệu mẫu thật (customers_raw, orders, issue_descriptions)
 ├── db/schema.sql                           ← DDL nộp ở BT1
-├── docs/                                   ← SRS, .drawio, api-contract, thay-doi-thiet-ke, test-cases, test-execution, ảnh kết quả
-├── src/backend/                            ← API Node.js (4 lớp) + scripts/ (migrate, seed, e2e, crud, demo, nfr2)
+├── docs/                                   ← SRS, .drawio, api-contract, thay-doi-thiet-ke, test-plan, test-report, bug-log, ảnh kết quả, screenshots/
+├── src/backend/                            ← API Node.js (4 lớp) + scripts/ (migrate, seed, e2e, crud, system-test, demo, nfr2)
 ├── src/frontend/                           ← giao diện M1–M4 + đăng nhập (server.js tĩnh, cổng 5173)
-├── tests/backend/                          ← 57 unit test (repository giả, không cần CSDL)
+├── tests/backend/                          ← 61 unit test (repository giả, không cần CSDL)
 └── tests/repository/                       ← 8 test repository trên PostgreSQL thật
 ```
 
@@ -137,14 +140,20 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 
 **CRUD theo thực thể:** Khách hàng và Thiết bị đủ Tạo · Đọc · Sửa · Xoá. Phiếu bảo hành có Tạo · Đọc · Sửa trạng thái (xét duyệt), **không có xoá** vì phiếu là chứng từ bảo hành (TD-07).
 
-## 6. Trạng thái hiện tại (buổi 12 – nộp Bài tập 2, tag `v0.2`)
+## 6. Trạng thái hiện tại (buổi 14 · bản nộp Bài tập 2 là tag `v0.2`)
 - [x] Buổi 8: module cốt lõi Phiếu bảo hành qua 3 lớp; migration theo DDL BT1; script NFR2 (TD-01…TD-11)
 - [x] Buổi 10: giao diện M1–M3 + đăng nhập gọi API thật, `DataState` 3 trạng thái, E2/E3, dữ liệu mẫu thật, luồng chính end-to-end (TD-12…TD-16)
 - [x] Buổi 11: khoá phiên bản (`package-lock.json` + `npm ci`, `.nvmrc`), **10 lỗi** gỡ theo bốn bước trong `docs/bug-log.md` (1 Critical), log JSON có `requestId`, xử lý lỗi xuyên lớp (503 + mã tra cứu), Docker Compose (TD-17…TD-19)
 - [x] Buổi 12: **CRUD đủ cho Khách hàng và Thiết bị** + màn hình **M4 Khách hàng** (tính năng phụ, TD-20)
-- [x] Kiểm thử: **57 unit test** (`npm test`) + 8 test repository + luồng e2e 10 bước + CRUD 17 bước + 8 test case thủ công; `docs/test-plan.md`, `docs/test-report.md`
+- [x] Kiểm thử (tại v0.2): **57 unit test** (`npm test`) + 8 test repository + luồng e2e 10 bước + CRUD 17 bước + 8 test case thủ công; `docs/test-plan.md`, `docs/test-report.md`
 - [x] Dọn repo theo bảy việc: không `.env`/`node_modules`/secret, tệp khoá đã commit, `.env.example` đủ biến, đã clone vào thư mục mới và chạy theo README
-- Ảnh chụp kết quả: `docs/anh-ket-qua/` (buổi 8), `docs/anh-ket-qua/buoi10/`, `docs/anh-ket-qua/bt2/`
+- Ảnh chụp kết quả: `docs/anh-ket-qua/` (buổi 8), `docs/anh-ket-qua/buoi10/`, `docs/anh-ket-qua/bt2/`, `docs/screenshots/` (Buổi 14 – theo mã test case)
+
+**Buổi 14 – kiểm thử hệ thống (chuẩn bị Bài tập 3)**
+- [x] Phản hồi BT2 đã có quyết định xử lý: TD-21 (gỡ mật khẩu khỏi tài liệu – BUG-11, Critical), TD-22 (quy ước commit + hook), TD-23 (test hệ thống + CI)
+- [x] Test Plan rút gọn bốn mục `docs/test-plan.md`; **12 test case hệ thống chạy thật** `npm run st` – lần 1: 9/12 PASS, 3 FAIL → BUG-11…BUG-13 → lần 2: **12/12 PASS** (`docs/test-report.md`)
+- [x] Bug Log thêm BUG-11…BUG-13, **mỗi bug một commit** `fix(...): … (BUG-xx)` (`docs/bug-log.md`)
+- [x] CI: `.github/workflows/ci.yml` chạy `npm test` → migrate + seed → `test:repo` → `e2e` → `crud` → `st` trên PostgreSQL 16
 
 ## 7. Tài liệu thiết kế (BT1)
 `docs/srs.md` · `docs/usecase.drawio` · `docs/architecture.drawio` · `docs/erd.drawio` · `docs/wireframe.drawio` · `docs/api-contract.md` · `docs/checklist-bt1.md` · `docs/thay-doi-thiet-ke.md`.

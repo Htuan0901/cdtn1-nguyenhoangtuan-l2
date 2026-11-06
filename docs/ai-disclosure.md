@@ -43,3 +43,14 @@ Họ tên: **Nguyễn Hoàng Tuấn**   –   MSSV: **2374802010542**   –   Ng
 | Claude (Anthropic) | Đối chiếu repo với bảng tiêu chí Buổi 12 (C1–C7, S1–S4), đề xuất bổ sung CRUD 2 thực thể (TD-20) | docs/thay-doi-thiet-ke.md | Đối chiếu từng mục kiểm chứng của tài liệu Buổi 12 |
 | Claude (Anthropic) | Viết mã CRUD khách hàng, thiết bị (service, repository, controller, route, validator), màn hình M4, script crud.js | src/backend, src/frontend/src/pages/M4-khach-hang | `npm run crud` 17/17; thao tác tay M4 bằng nv01 và ql01; đọc lại từng hàm để trả lời bộ ba câu hỏi |
 | Claude (Anthropic) | Viết TC-35…TC-42, TR-06…TR-08; cập nhật test plan/report; dọn repo theo bảy việc; soạn PDF Bài tập 2 | tests/, docs/, BT2_2374802010542_NguyenHoangTuan.pdf | `npm test` 57/57, `npm run test:repo` 8/8 trên thư mục clone mới; số liệu trong PDF lấy từ đầu ra lệnh |
+
+## Buổi 14 – kiểm thử hệ thống và xử lý phản hồi BT2 (06/11/2026)
+
+| Công cụ | Dùng vào việc gì | Áp dụng ở phần nào | Đã kiểm chứng thế nào |
+|---|---|---|---|
+| Claude (Anthropic) | Đọc phản hồi BT2, đề xuất quyết định xử lý (TD-21, TD-22) và cách gỡ mật khẩu khỏi tài liệu (`docker run --env-file`) | `docs/thay-doi-thiet-ke.md`, README, `.env.example`, `docker-compose.yml` | ST-11 / TC-46 quét tài liệu: 4 vị trí → 0; clone mới làm đúng README bước 3 – 4 dựng được CSDL; em tự đổi mật khẩu PostgreSQL trên máy |
+| Claude (Anthropic) | Gợi ý 12 test case hệ thống theo năm loại, viết `scripts/system-test.js`, hook `commit-msg`, `.github/workflows/ci.yml` | `src/backend/scripts/`, `.githooks/`, `.github/` | Em chạy `npm run st` trên máy: lần 1 9/12 PASS, lần 2 12/12; chạy lại từng case `npm run st -- ST-xx`; thử hook với thông điệp sai (bị từ chối) và đúng (qua); xem tab Actions |
+| Claude (Anthropic) | Tìm lỗi ở ranh giới HTTP (tham số trùng tên, body quá lớn), đề xuất cách sửa BUG-12, BUG-13 và test hồi quy TC-43…TC-45 | `validator.js`, `errorHandler.js`, `tests/backend/buoi14.test.js` | Test hồi quy FAIL trên mã cũ, PASS sau khi sửa; `npm test` 61/61, `test:repo` 8/8, `e2e` 10/10, `crud` 17/17 |
+| Claude (Anthropic) | Soạn Test Plan, Test Report, Bug Log BUG-11…BUG-13 | `docs/test-plan.md`, `docs/test-report.md`, `docs/bug-log.md` | Đối chiếu từng ô “kết quả thực tế” với ảnh chụp `docs/screenshots/` của lần chạy trên máy em; phân loại mức độ theo ba câu hỏi của Buổi 13 |
+
+*Tôi xác nhận đã đọc, hiểu và chịu trách nhiệm về toàn bộ nội dung nộp.* – Nguyễn Hoàng Tuấn · 2374802010542 · 06/11/2026

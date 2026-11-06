@@ -1,6 +1,6 @@
 # Bug Log – Smart CRM · Luồng L2 (track SE)
 
-Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Buổi 11; mỗi lỗi được gỡ theo bốn bước
+Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Buổi 11 (Buổi 13 – 14: từ BUG-11 trở đi mỗi bug một commit riêng `fix(…): … (BUG-xx)`); mỗi lỗi được gỡ theo bốn bước
 **tái lập → khoanh vùng → sửa nguyên nhân → xác nhận bằng test**. Dòng 5 ghi NGUYÊN NHÂN, không ghi triệu chứng.
 
 | Mã | Mức độ | Tóm tắt | Phát hiện | Commit sửa | Test xác nhận |
@@ -15,6 +15,44 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | BUG-08 | Major | Mở giao diện bằng 127.0.0.1 → CORS chặn mọi lời gọi API | Buổi 11 | [d055c83](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d055c83) | TC-28 |
 | BUG-09 | Major | CSDL mất kết nối → 500 không mã tra cứu, log không truy vết được | Buổi 11 | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) | TC-30, TC-33 |
 | BUG-10 | **Critical** | CSDL khởi động lại khi API đang chạy → API chết hẳn | Buổi 11 | [04bb9b7](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/04bb9b7) | TC-34 |
+| BUG-11 | **Critical** | Mật khẩu PostgreSQL ghi trong README, TD-11 và `.env.example` của repo public | Buổi 14 – phản hồi BT2, ST-11 | COMMIT_BUG-11 | ST-11, TC-46 |
+| BUG-12 | Minor | `GET /api/tickets?q=a&q=b` (hoặc `q[x]=1`) trả 500 thay vì 400 | Buổi 14 – ST-08 | COMMIT_BUG-12 | ST-08, TC-43, TC-44 |
+| BUG-13 | Minor | Body JSON lớn hơn 100 KB trả 500 thay vì 413 | Buổi 14 – ST-09 | COMMIT_BUG-13 | ST-09, TC-45 |
+
+---
+
+### BUG-11 · Critical – Mật khẩu CSDL nằm trong tài liệu của repo public
+| Dòng | Nội dung |
+|---|---|
+| 1. Mã và mức độ | BUG-11 · **Critical** – lỗ hổng bảo mật: repo PUBLIC nên ai cũng đọc được mật khẩu PostgreSQL trên máy phát triển (dữ liệu **lộ**); người dùng hay dùng lại mật khẩu ở nơi khác. Theo hướng dẫn Buổi 14, secret trong repo là Critical |
+| 2. Phát hiện bởi | Giảng viên khi chấm BT2 (“Không ghi chuỗi kết nối có mật khẩu (kể cả mật khẩu máy cá nhân) vào tài liệu trong repo”); xác nhận bằng ST-11 lần 1 |
+| 3. Triệu chứng | ST-11 lần 1 FAIL: **4 vị trí** lộ mật khẩu – `README.md:34` (lệnh `docker run` có ghi thẳng mật khẩu sau biến POSTGRES_PASSWORD), `.env.example:4` (`DATABASE_URL` có mật khẩu thật của máy), `.env.example:6`, `docs/thay-doi-thiet-ke.md:138` (chuỗi kết nối đầy đủ trong TD-11) |
+| 4. Cách tái lập | Mở repo ở cửa sổ ẩn danh, tìm `postgres://` hoặc `POSTGRES_PASSWORD` → thấy mật khẩu; hoặc `npm run st -- ST-11` trên commit trước khi sửa. Tái lập **3/3 lần** |
+| 5. Nguyên nhân | Khi thêm Cách chạy bằng Docker (TD-11), em chép thẳng mật khẩu PostgreSQL đang dùng trên máy vào lệnh `docker run` của README, vào `.env.example` và vào TD-11 thay vì để lệnh đọc từ `.env`; không có bước kiểm nào chặn mật khẩu trong tài liệu |
+| 6. Cách sửa | **Đổi khoá trước:** đổi mật khẩu PostgreSQL trên máy (`ALTER USER postgres PASSWORD …`), cập nhật `.env` (không commit). Sau đó gỡ khỏi repo: `docker run --env-file .env` thay cho mật khẩu viết trong lệnh; `DB_PASSWORD` → `POSTGRES_PASSWORD` dùng chung cho `docker run` và `docker compose`; `.env.example` chỉ còn giá trị mẫu `doi_mat_khau_nay`; TD-11 bỏ chuỗi kết nối. Lịch sử commit cũ vẫn chứa mật khẩu cũ nên mật khẩu đó coi như đã lộ và không dùng lại (không viết lại lịch sử để giữ tag `v0.2` – TD-21) |
+| 7. Commit và xác nhận | COMMIT_BUG-11 · ST-11 lần 2: **0 vị trí** · TC-46 (quét tài liệu trong `npm test`) FAIL trên mã cũ, PASS sau khi sửa · clone mới làm đúng README bước 3 – 4 vẫn dựng được CSDL |
+
+### BUG-12 · Minor – Tham số `q` trùng tên làm `GET /api/tickets` trả 500
+| Dòng | Nội dung |
+|---|---|
+| 1. Mã và mức độ | BUG-12 · **Minor** – người dùng vẫn làm được việc (giao diện M1 luôn gửi một chuỗi), dữ liệu không sai và không lộ (người gọi chỉ nhận thông điệp chung + mã tra cứu); nhưng request sai của người gọi bị tính là lỗi hệ thống (500, log ERROR), làm nhiễu việc theo dõi lỗi thật |
+| 2. Phát hiện bởi | ST-08 lần 1 (test hệ thống, đoán lỗi ở ranh giới HTTP: tham số trùng tên, tham số dạng đối tượng) |
+| 3. Triệu chứng | `GET /api/tickets?q=0901234567&q=BH-000001` và `GET /api/tickets?q[x]=1` → **500 LOI_HE_THONG**; log: `filters.q.trim is not a function` |
+| 4. Cách tái lập | `npm start` → `npm run st -- ST-08` (hoặc curl với token của `nv01`). Tái lập **3/3 lần** |
+| 5. Nguyên nhân | Express 4 (query parser “extended”) tách `?q=a&q=b` thành MẢNG và `?q[x]=1` thành ĐỐI TƯỢNG. Schema `listTickets` của validator không kiểm `q` nên giá trị không phải chuỗi đi thẳng vào lớp ③; `ticketService.listTickets` (dòng 56) gọi `filters.q.trim()` → TypeError. Khoanh vùng: ngăn xếp lỗi dừng ở `ticketService.js:56`, request đã qua validator |
+| 6. Cách sửa | `api/middlewares/validator.js`: `listTickets` kiểm `q` là chuỗi ≤ 100 ký tự (cùng giới hạn với `listCustomers`) → 400 VALIDATION_ERROR [q]; lớp ③ không đổi |
+| 7. Commit và xác nhận | COMMIT_BUG-12 · ST-08 lần 2: 400 VALIDATION_ERROR [q] cả hai bước · TC-43, TC-44 FAIL trên mã cũ, PASS sau khi sửa · `npm test` 61/61 |
+
+### BUG-13 · Minor – Body vượt 100 KB trả 500 thay vì 413
+| Dòng | Nội dung |
+|---|---|
+| 1. Mã và mức độ | BUG-13 · **Minor** – người dùng không bị chặn việc (form không gửi tới 100 KB), không sai hay lộ dữ liệu, không ghi gì vào CSDL; nhưng lỗi của người gửi bị báo thành 500 + log ERROR |
+| 2. Phát hiện bởi | ST-09 lần 1 (test hệ thống, dữ liệu sai: body vượt giới hạn) |
+| 3. Triệu chứng | `POST /api/customers` với họ tên 120.000 ký tự → **500 LOI_HE_THONG**; customer 673 → 673 (+0); log ERROR “request entity too large” |
+| 4. Cách tái lập | `npm start` → `npm run st -- ST-09`. Tái lập **3/3 lần** |
+| 5. Nguyên nhân | `app.js` đặt `express.json({ limit: '100kb' })`; khi vượt, body-parser ném lỗi có `type: 'entity.too.large'`, `status: 413`. `errorHandler` chỉ nhận diện `entity.parse.failed` và `AppError`, mọi lỗi khác rơi vào nhánh lỗi hệ thống → 500 |
+| 6. Cách sửa | `api/middlewares/errorHandler.js`: lỗi `entity.too.large` → **413 PAYLOAD_TOO_LARGE** “Dữ liệu gửi lên quá lớn (tối đa 100 KB)”, log mức INFO như các lỗi do người gửi |
+| 7. Commit và xác nhận | COMMIT_BUG-13 · ST-09 lần 2: 413 PAYLOAD_TOO_LARGE, customer +0 · TC-45 FAIL trên mã cũ, PASS sau khi sửa · `npm test` 61/61 |
 
 ---
 
