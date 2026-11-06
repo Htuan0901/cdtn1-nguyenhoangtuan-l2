@@ -12,6 +12,10 @@ function errorHandler(err, req, res, _next) {
     log.info({ ...where(req), status: 400, code: 'INVALID_JSON' }, 'body không phải JSON');
     return res.status(400).json({ code: 'INVALID_JSON', message: 'Body không phải JSON hợp lệ' });
   }
+  if (err.type === 'entity.too.large') { // express.json: body vượt limit '100kb' là lỗi của người gửi, không phải lỗi hệ thống (BUG-13)
+    log.info({ ...where(req), status: 413, code: 'PAYLOAD_TOO_LARGE' }, 'body vượt giới hạn');
+    return res.status(413).json({ code: 'PAYLOAD_TOO_LARGE', message: 'Dữ liệu gửi lên quá lớn (tối đa 100 KB)' });
+  }
   if (err instanceof AppError) {
     // Lỗi nghiệp vụ / dữ liệu vào: là chuyện bình thường của người dùng → INFO, không phải ERROR
     log.info({ ...where(req), status: err.status, code: err.code, staffId: req.ctx && req.ctx.staffId }, 'từ chối yêu cầu');

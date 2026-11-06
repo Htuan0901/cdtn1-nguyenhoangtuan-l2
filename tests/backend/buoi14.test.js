@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { validate } = require('../../src/backend/src/api/middlewares/validator');
+const { errorHandler } = require('../../src/backend/src/api/middlewares/errorHandler');
 
 // Gọi middleware validate như Express: trả về lỗi truyền cho next (hoặc undefined nếu hợp lệ)
 function runValidate(name, source, data) {
@@ -24,6 +25,19 @@ test('TC-43 GET /tickets: q dạng mảng hoặc đối tượng → 400 VALIDAT
 test('TC-44 GET /tickets: q là chuỗi 100 ký tự được nhận, 101 ký tự bị từ chối (biên, BUG-12)', () => {
   assert.equal(runValidate('listTickets', 'query', { q: 'a'.repeat(100) }), undefined);
   assert.deepEqual(runValidate('listTickets', 'query', { q: 'a'.repeat(101) }).fields, ['q']);
+});
+
+test('TC-45 body JSON vượt giới hạn 100 KB → 413 PAYLOAD_TOO_LARGE, log INFO thay vì ERROR (BUG-13)', () => {
+  // lỗi do express.json (body-parser) ném ra khi body quá lớn
+  const err = Object.assign(new Error('request entity too large'), { type: 'entity.too.large', status: 413, statusCode: 413 });
+  const res = { statusCode: null, body: null, status(s) { this.statusCode = s; return this; }, json(b) { this.body = b; return this; } };
+  const lines = []; const orig = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (chunk, ...rest) => (String(chunk).startsWith('{"time"') ? (lines.push(JSON.parse(chunk)), true) : orig(chunk, ...rest));
+  try { errorHandler(err, { requestId: 'abc12345', method: 'POST', originalUrl: '/api/customers' }, res, () => {}); } finally { process.stdout.write = orig; }
+  assert.equal(res.statusCode, 413);
+  assert.equal(res.body.code, 'PAYLOAD_TOO_LARGE');
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].level, 'INFO');
 });
 
 test('TC-46 không còn mật khẩu / chuỗi kết nối có mật khẩu trong tài liệu và cấu hình đã commit (BUG-11)', () => {
