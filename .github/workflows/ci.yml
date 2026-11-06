@@ -1,0 +1,60 @@
+# CI (Buổi 14): mỗi lần push / pull request, dựng hệ thống từ đầu trên máy sạch của GitHub rồi chạy toàn bộ kiểm thử.
+# CSDL là container tạm của CI, mật khẩu lấy từ GIÁ TRỊ MẪU trong .env.example (không phải secret thật – TD-21).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  kiem-thu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: doi_mat_khau_nay
+          POSTGRES_DB: smartcrm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d smartcrm"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    defaults:
+      run:
+        working-directory: src/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/backend/package-lock.json
+      - name: Tạo .env từ .env.example (giá trị mẫu)
+        run: cp ../../.env.example ../../.env
+      - name: Cài đúng phiên bản trong package-lock.json
+        run: npm ci
+      - name: Unit test (không cần CSDL)
+        run: npm test
+      - name: Migration + dữ liệu mẫu
+        run: npm run migrate && npm run seed
+      - name: Test repository trên PostgreSQL thật
+        run: npm run test:repo
+      - name: Khởi động API và chờ /health
+        run: |
+          nohup npm start > api.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/health && exit 0
+            sleep 1
+          done
+          cat api.log; exit 1
+      - name: Luồng chính end-to-end
+        run: npm run e2e
+      - name: CRUD Khách hàng + Thiết bị
+        run: npm run crud
+      - name: 12 test case hệ thống (Test Report)
+        run: npm run st
+      - name: In log API khi có bước lỗi
+        if: failure()
+        run: cat api.log || true
