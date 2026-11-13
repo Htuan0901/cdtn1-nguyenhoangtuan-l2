@@ -37,6 +37,8 @@ jobs:
         run: npm ci
       - name: Unit test (không cần CSDL)
         run: npm test
+      - name: Không còn lỗ hổng mức High/Critical trong thư viện chạy (hồi quy BUG-15)
+        run: npm audit --omit=dev --audit-level=high
       - name: Migration + dữ liệu mẫu
         run: npm run migrate && npm run seed
       - name: Test repository trên PostgreSQL thật
