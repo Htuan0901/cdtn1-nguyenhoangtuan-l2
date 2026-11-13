@@ -1,0 +1,45 @@
+# Render Blueprint – bản deploy công khai (điểm cộng BT3 mục 3.3, TD-27).
+# Tạo trên Render: New → Blueprint → chọn repo này. Không có secret nào trong tệp:
+#   DATABASE_URL lấy từ CSDL do Render tạo · JWT_SECRET do Render tự sinh · URL giữa hai dịch vụ nhập trên Dashboard.
+services:
+  # API – build từ đúng Dockerfile dùng cho docker compose (bố cục repo, chạy bằng user node)
+  - type: web
+    name: smartcrm-l2-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: .
+    dockerfilePath: ./src/backend/Dockerfile
+    # Giống docker-compose.yml: migrate + nạp dữ liệu mẫu (chạy lại không nhân đôi – C8) rồi mới mở API
+    dockerCommand: sh -c "node scripts/migrate.js && node scripts/seed-mau.js && node src/server.js"
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smartcrm-l2-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        sync: false            # nhập trên Dashboard: https://<tên-web>.onrender.com
+      - key: PORT
+        value: "10000"
+      - key: LOG_LEVEL
+        value: info
+
+  # Giao diện – trang tĩnh (không ngủ, không tốn giờ chạy). /env.js sinh lúc build từ API_BASE_URL.
+  - type: web
+    name: smartcrm-l2-web
+    runtime: static
+    buildCommand: mkdir -p dist && cp -r src/frontend/index.html src/frontend/src dist/ && echo "window.__API_BASE_URL__ = \"${API_BASE_URL}\";" > dist/env.js
+    staticPublishPath: ./dist
+    envVars:
+      - key: API_BASE_URL
+        sync: false            # nhập trên Dashboard: https://<tên-api>.onrender.com/api
+
+databases:
+  - name: smartcrm-l2-db
+    plan: free
+    region: singapore
+    databaseName: smartcrm
+    user: smartcrm

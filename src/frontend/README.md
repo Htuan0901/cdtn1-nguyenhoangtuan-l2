@@ -13,7 +13,7 @@ không bước build (TD-13). Chạy: `npm start` → http://localhost:5173 (bac
 | `src/api/client.js` | — | — | nơi DUY NHẤT gọi `fetch`: gắn JWT, chuẩn hoá lỗi, 401 → xoá token về đăng nhập, quá 10 giây → báo lỗi |
 | `src/api/*.api.js` | — | — | `tickets.api.js`, `customers.api.js`, `devices.api.js`, `categories.api.js`, `auth.api.js` |
 | `src/components/DataState.js` | — | — | ba trạng thái: đang tải · rỗng (có câu giải thích) · lỗi (có nút Thử lại) |
-| `src/config.js` | — | — | `API_BASE_URL` (mặc định `http://localhost:3000/api`) |
+| `src/config.js` | — | — | `API_BASE_URL`: lấy từ `/env.js` (biến môi trường `API_BASE_URL` của bản deploy), không có thì mặc định `http://localhost:3000/api` |
 | `server.js` | — | — | máy chủ tĩnh cổng 5173 (đổi bằng biến `FRONTEND_PORT`) |
 
 Quy tắc:

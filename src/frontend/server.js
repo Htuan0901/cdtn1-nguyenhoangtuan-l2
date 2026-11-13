@@ -13,6 +13,12 @@ const TYPES = {
 
 http.createServer((req, res) => {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  // /env.js: địa chỉ API lấy từ biến môi trường API_BASE_URL nếu có; không có → giao diện dùng mặc định
+  if (urlPath === '/env.js') {
+    const base = process.env.API_BASE_URL || '';
+    res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
+    return res.end(base ? `window.__API_BASE_URL__ = ${JSON.stringify(base)};\n` : '// API_BASE_URL không đặt – dùng mặc định trong src/config.js\n');
+  }
   const rel = urlPath === '/' ? 'index.html' : urlPath.slice(1);
   const file = path.resolve(ROOT, rel);
   // Chỉ phục vụ index.html và thư mục src/ – không lộ server.js, package.json…
