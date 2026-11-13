@@ -6,6 +6,16 @@
 
 **Học phần:** Chuyên đề Tốt nghiệp 1 – Trường ĐH Văn Lang · Case study: Smart CRM – Mekong Mobile
 
+## Chạy hệ thống – đúng 2 lệnh (Bài tập 3 · tag `v1.0`)
+Cần Git + Docker Desktop đang chạy (chi tiết: **[`docs/deployment-guide.md`](docs/deployment-guide.md)**, tiếng Anh). Tại thư mục gốc repo vừa clone:
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+Kiểm tra: `docker compose ps` (3 dịch vụ `healthy`) · `curl -s http://localhost:3000/health` → `{"status":"OK","db":"OK",…}` · mở **http://localhost:5173**.
+Chạy bộ test trong container: `docker compose exec -T api npm test` (64/64) · 12 test case của Test Report: `docker compose exec -T api npm run st` (12/12).
+
 ## 1. Mô tả bài toán và phạm vi
 Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên tiếp nhận tra cứu khách hàng theo số điện thoại → ghi nhận thiết bị (Serial/IMEI) → nhập mô tả lỗi, chọn nhóm sự cố và mức ưu tiên → hệ thống kiểm tra điều kiện bảo hành, tính hạn cam kết → **phiếu bảo hành được tạo ở trạng thái “Mới”** (thiếu ngày mua: “Chờ xác minh bảo hành”, Quản lý trung tâm bảo hành xét duyệt rồi chuyển “Mới”).
 
@@ -13,7 +23,7 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 - **Không làm:** phân công kỹ thuật viên (L4), tồn kho (L5), dashboard (L6), khảo sát (L8), phân loại bằng AI (L10), SMS/Zalo, quản lý tài khoản, sửa/xóa phiếu.
 
 ## 2. Yêu cầu môi trường
-- **Node.js 20 LTS** (≥ 20.6, dùng `node --env-file` và `fetch` có sẵn; ghim trong `.nvmrc`) và npm 10 – kiểm tra: `node -v`
+- **Node.js 20 LTS** (dùng `fetch` có sẵn; ghim trong `.nvmrc`) và npm 10 – kiểm tra: `node -v`
 - **PostgreSQL 16** (cổng 5432) – chạy bằng **Docker Desktop** (cách dùng trong README này, TD-11) hoặc cài trực tiếp
 - **Git Bash** (Windows) hoặc terminal bất kỳ; trình duyệt Chrome/Edge/Firefox bản mới
 - Biến môi trường: `.env` ở thư mục gốc repo, tạo từ `.env.example` (không commit `.env`) – gồm `POSTGRES_PASSWORD`, `DATABASE_URL`, `PORT`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `LOG_LEVEL`
@@ -29,7 +39,7 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 
 | Bước | Lệnh | Kết quả mong đợi |
 |---|---|---|
-| 1 | `git clone https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2.git thu-nghiem` | thư mục `thu-nghiem` ở bản mới nhất (nhánh main). Bản đã nộp Bài tập 2 là tag `v0.2` – chạy theo README trong tag đó |
+| 1 | `git clone --branch v1.0 https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2.git thu-nghiem` | thư mục `thu-nghiem` ở bản nộp **Bài tập 3** (tag `v1.0`). Bản nộp BT2 là tag `v0.2` |
 | 2 | `cd thu-nghiem` | vào thư mục gốc repo |
 | 3 | `cp .env.example .env` | tạo `.env` từ giá trị mẫu. Muốn dùng mật khẩu riêng thì sửa **cả** `POSTGRES_PASSWORD` **và** mật khẩu trong `DATABASE_URL` trước bước 4 (không ghi mật khẩu thật vào tài liệu – TD-21) |
 | 4 | `docker run -d --name smartcrm-pg --env-file .env -e POSTGRES_DB=smartcrm -p 5432:5432 postgres:16` | `docker ps` thấy `smartcrm-pg` Up. Lần sau chỉ cần `docker start smartcrm-pg` |
@@ -37,7 +47,7 @@ Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên ti�
 | 6 | `npm ci` | `added … packages` – cài **đúng** phiên bản trong `package-lock.json` |
 | 7 | `npm run migrate` | `✓ đã chạy 001, 002, 003` – 6 bảng (chạy lại → “bỏ qua”) |
 | 8 | `npm run seed` | nạp **dữ liệu mẫu thật** `data/mau/*.csv`: 378 + 286 khách hàng, 290 thiết bị, 120 phiếu; chạy lại không nhân đôi |
-| 9 | `npm test` | `# tests 61` `# pass 61` `# fail 0` (không cần CSDL) |
+| 9 | `npm test` | `tests 64` · `pass 64` · `fail 0` (không cần CSDL) |
 | 10 | `npm start` | `Smart CRM L2 API chạy tại http://localhost:3000` – **để nguyên cửa sổ này** |
 
 **Cửa sổ terminal 2 – giao diện** (mở Git Bash mới tại thư mục gốc repo)
@@ -76,7 +86,12 @@ Mở Docker Desktop, tại thư mục gốc repo vừa clone:
 | Bước | Lệnh | Kết quả mong đợi |
 |---|---|---|
 | B1 | `cp .env.example .env` | tạo `.env` (mật khẩu mẫu chỉ dùng trên máy phát triển) |
-| B2 | `docker compose up --build` | `db` healthy → `api` chạy migrate + nạp dữ liệu mẫu → `web`; mở **http://localhost:5173**, đăng nhập `nv01` / `Mekong@2026` |
+| B2 | `docker compose up -d --build` | `db` healthy → `api` chạy migrate + nạp dữ liệu mẫu → `web`; mở **http://localhost:5173**, đăng nhập `nv01` / `Mekong@2026` |
+| B3 | `docker compose ps` | cả `db`, `api`, `web` đều `Up … (healthy)` (chờ 30–60 giây) |
+| B4 | `docker compose exec -T api npm test` | unit test chạy **trong container**: `tests 64` · `pass 64` · `fail 0` |
+| B5 | `docker compose exec -T api npm run st` | 12 test case hệ thống trong container: `TỔNG: 12/12 PASS` (một test case: `… npm run st -- ST-05`) |
+
+Hướng dẫn triển khai đầy đủ (tiếng Anh – yêu cầu, biến môi trường, dữ liệu mẫu, cách kiểm tra): **[`docs/deployment-guide.md`](docs/deployment-guide.md)** · Tài liệu API: **[`docs/api-docs.md`](docs/api-docs.md)** · Checklist bảo mật: [`docs/checklist-bao-mat.md`](docs/checklist-bao-mat.md)
 
 Lệnh thường dùng: `docker compose ps` (trạng thái, phải `healthy`) · `docker compose logs -f api --tail 50` (xem log) · `docker compose down` (dừng, giữ dữ liệu) · `docker compose down -v` (xoá cả dữ liệu, làm lại từ đầu).
 Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và container `smartcrm-pg` cũ (`docker stop smartcrm-pg`) rồi chạy lại B2.
@@ -92,7 +107,7 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 | `EADDRINUSE :3000` / `:5173` | cổng đang bị chiếm → tắt cửa sổ cũ (Ctrl + C) hoặc đổi `PORT` trong `.env` và `API_BASE_URL` trong `src/frontend/src/config.js` |
 | Giao diện báo “Không kết nối được máy chủ API” | backend (cửa sổ 1) chưa chạy → `npm start` rồi bấm **Thử lại** |
 | Trình duyệt báo lỗi CORS | `FRONTEND_ORIGIN` trong `.env` phải đúng `http://localhost:5173` → khởi động lại backend |
-| `bad option: --env-file` | Node.js cũ hơn 20.6 → cài Node.js 20 LTS mới |
+| Git Bash: `the input device is not a TTY` | thêm `-T` sau `exec`: `docker compose exec -T api …` |
 
 ## 4. Cấu trúc thư mục – ánh xạ với sơ đồ kiến trúc (`docs/architecture.drawio`)
 | Lớp trong sơ đồ | Thư mục | Thành phần |
@@ -109,7 +124,7 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 
 ```
 ├── README.md · .env.example · .gitignore · .nvmrc · docker-compose.yml · .dockerignore
-├── .github/workflows/ci.yml                ← CI: npm test, test:repo, e2e, crud, st (TD-23)
+├── .github/workflows/ci.yml                ← CI: npm test, test:repo, e2e, crud, st (TD-23) + job dong-goi: docker compose trên máy sạch (TD-24)
 ├── .githooks/commit-msg                    ← kiểm tra thông điệp commit (TD-22)
 ├── BT1_2374802010542_NguyenHoangTuan.pdf   ← BT1 (cập nhật sau phản hồi)
 ├── data/mau/                               ← dữ liệu mẫu thật (customers_raw, orders, issue_descriptions)
@@ -117,11 +132,11 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 ├── docs/                                   ← SRS, .drawio, api-contract, thay-doi-thiet-ke, test-plan, test-report, bug-log, ảnh kết quả, screenshots/
 ├── src/backend/                            ← API Node.js (4 lớp) + scripts/ (migrate, seed, e2e, crud, system-test, demo, nfr2)
 ├── src/frontend/                           ← giao diện M1–M4 + đăng nhập (server.js tĩnh, cổng 5173)
-├── tests/backend/                          ← 61 unit test (repository giả, không cần CSDL)
+├── tests/backend/                          ← 64 unit test (repository giả, không cần CSDL)
 └── tests/repository/                       ← 8 test repository trên PostgreSQL thật
 ```
 
-## 5. API đã chạy được (chi tiết: `docs/api-contract.md`)
+## 5. API đã chạy được (tài liệu API tiếng Anh: `docs/api-docs.md` · thiết kế: `docs/api-contract.md`)
 | Endpoint | Use case | Ghi chú |
 |---|---|---|
 | `GET /health` | — | kiểm cả CSDL: 200 `{"db":"OK"}` hoặc 503 `{"db":"DOWN"}` (Docker HEALTHCHECK) |
@@ -140,7 +155,12 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 
 **CRUD theo thực thể:** Khách hàng và Thiết bị đủ Tạo · Đọc · Sửa · Xoá. Phiếu bảo hành có Tạo · Đọc · Sửa trạng thái (xét duyệt), **không có xoá** vì phiếu là chứng từ bảo hành (TD-07).
 
-## 6. Trạng thái hiện tại (buổi 14 · bản nộp Bài tập 2 là tag `v0.2`)
+## 6. Trạng thái hiện tại (Bài tập 3 – tag `v1.0` · bản nộp Bài tập 2 là tag `v0.2`)
+
+**Buổi 15–16 – đóng gói và tài liệu (Bài tập 3)**
+- [x] Gói đóng gói 2 lệnh: `docker-compose.yml` (3 dịch vụ có healthcheck, dữ liệu mẫu tự nạp); **mọi bộ test chạy được trong container** (BUG-14, TD-24)
+- [x] Phép thử máy trắng tự động trên CI (job `dong-goi`); tài liệu: `docs/deployment-guide.md`, `docs/api-docs.md` (ví dụ chép từ lần chạy thật), `docs/checklist-bao-mat.md`
+
 - [x] Buổi 8: module cốt lõi Phiếu bảo hành qua 3 lớp; migration theo DDL BT1; script NFR2 (TD-01…TD-11)
 - [x] Buổi 10: giao diện M1–M3 + đăng nhập gọi API thật, `DataState` 3 trạng thái, E2/E3, dữ liệu mẫu thật, luồng chính end-to-end (TD-12…TD-16)
 - [x] Buổi 11: khoá phiên bản (`package-lock.json` + `npm ci`, `.nvmrc`), **10 lỗi** gỡ theo bốn bước trong `docs/bug-log.md` (1 Critical), log JSON có `requestId`, xử lý lỗi xuyên lớp (503 + mã tra cứu), Docker Compose (TD-17…TD-19)
@@ -157,7 +177,8 @@ Nếu báo `port is already allocated`: tắt các cửa sổ `npm start` và co
 
 ## 7. Tài liệu thiết kế (BT1)
 `docs/srs.md` · `docs/usecase.drawio` · `docs/architecture.drawio` · `docs/erd.drawio` · `docs/wireframe.drawio` · `docs/api-contract.md` · `docs/checklist-bt1.md` · `docs/thay-doi-thiet-ke.md`.
-Kiểm thử và gỡ lỗi (BT2): `docs/test-plan.md` · `docs/test-report.md` · `docs/test-cases.md` · `docs/test-execution.md` · `docs/bug-log.md`.
+Kiểm thử và gỡ lỗi (BT2, BT3): `docs/test-plan.md` · `docs/test-report.md` · `docs/bug-log.md` · `docs/test-cases.md` · `docs/test-execution.md`.
+Đóng gói và bàn giao (BT3): `docs/deployment-guide.md` · `docs/api-docs.md` · `docs/checklist-bao-mat.md` · `docs/ai-disclosure.md`.
 Mở `.drawio` bằng https://app.diagrams.net (File → Open from → Device).
 
 ## 8. Khai báo sử dụng công cụ AI
