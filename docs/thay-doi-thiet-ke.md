@@ -3,6 +3,28 @@
 > Ghi theo mẫu Buổi 8: mỗi thay đổi có mã TD-xx và đủ bốn dòng **phản hồi – quyết định – lý do – ảnh hưởng**.
 > File được nối tiếp khi nhận phản hồi BT2, BT3.
 
+## Bài tập 3 – Buổi 15–16 (ngày 13/11/2026)
+
+Thay đổi so với bản nộp BT2 (tag `v0.2`) và Buổi 14 để đạt mức đóng gói của Bài tập 3. Không đổi kiến trúc 4 lớp, không đổi endpoint, không đổi CSDL.
+
+### TD-24 Đóng gói: mọi bộ test chạy được trong container; image giữ bố cục repo
+- **Phản hồi của GV:** (Buổi 15, đề BT3 mục 2.4) Phép thử máy trắng: clone tag `v1.0` vào thư mục trống, chỉ chạy `cp .env.example .env` và `docker compose up -d --build`; mọi dịch vụ phải healthy; chạy bộ test bằng lệnh ghi trong Guide; giảng viên chọn ngẫu nhiên một test case để chạy lại tại chỗ.
+- **Quyết định:** SỬA (BUG-14). `src/backend/Dockerfile`: WORKDIR `/repo/src/backend`; chép `tests/`, `data/mau`, `docs/*.md`, `README.md`, `docker-compose.yml`, `.env.example` vào đúng vị trí như trong repo. `.dockerignore` không loại `tests/` nữa; chỉ loại `docs/screenshots`; vẫn loại `.env`, `.git`, `node_modules`. Thay cờ `node --env-file` của các script npm bằng `scripts/load-env.js`: nạp `.env` nếu có, không ghi đè biến môi trường.
+- **Lý do:** Bản BT2 chỉ dựng được hệ thống. Bộ test (unit + 12 test case của Test Report) chỉ chạy được trên máy có Node.js và PostgreSQL mở cổng 5432, trong khi Compose không mở cổng CSDL ra máy chủ. Giữ đúng bố cục thì cùng một lệnh `npm test` / `npm run st` chạy được trên máy dev, CI và container, nên giảng viên chỉ cần Docker.
+- **Ảnh hưởng:** `src/backend/Dockerfile`, `.dockerignore`, `src/backend/scripts/load-env.js`, `src/backend/package.json`, test hồi quy `tests/backend/buoi16.test.js` (TC-47…TC-49; `npm test` 61 → 64). Image lớn thêm khoảng 300 KB (test và tài liệu dạng văn bản, không có ảnh, không có `.env`).
+
+### TD-25 Phép thử máy trắng tự động trên CI; ví dụ API chép từ lần chạy thật
+- **Phản hồi của GV:** (đề BT3 mục 2.6, 4.2-S1, C9) API docs phải đủ mọi endpoint, mỗi endpoint đủ bảy mục, ví dụ request/response THẬT chép từ lần chạy thật; tài liệu không được mô tả thứ hệ thống không làm.
+- **Quyết định:** BỔ SUNG job CI `dong-goi`: làm đúng Deployment Guide (bước 3–4), rồi kiểm theo mục 5 "Verify it works" (ps, /health, số bản ghi, migrate + seed lần 2, `npm test`, `test:repo`, `e2e`, `crud`, `npm run st` trong container, quét log). BỔ SUNG `scripts/api-examples.js`: gọi đủ 17 endpoint trên hệ thống đang chạy, ghi nguyên request/response (đã che JWT) vào `docs/api-docs.md`, và báo lỗi nếu mã HTTP khác tài liệu. Script cũng chạy trong CI.
+- **Lý do:** Ví dụ viết tay dễ lệch với hệ thống thật (lỗi C9). Ví dụ do script chép ra là kết quả thật và kiểm lại được bất kỳ lúc nào. CI lặp lại phép thử máy trắng sau mỗi lần push, nên lỗi đóng gói lộ ra trước khi giảng viên chạy.
+- **Ảnh hưởng:** `.github/workflows/ci.yml`, `src/backend/scripts/api-examples.js`, `docs/api-docs.md`, `docs/deployment-guide.md`, `docs/checklist-bao-mat.md`, README (mục "Chạy hệ thống – đúng 2 lệnh").
+
+### TD-26 Ghim thuật toán JWT khi xác thực
+- **Phản hồi của GV:** (Buổi 15, checklist bảo mật mục 3 – kiểm soát truy cập)
+- **Quyết định:** BỔ SUNG `algorithms: ['HS256']` vào `jwt.verify` (`authMiddleware.js`).
+- **Lý do:** Thư viện đã từ chối `alg: none` (ST-10 bước 2 PASS từ trước, nên đây **không phải bug**). Ghi rõ thuật toán là phòng thủ thêm: không chấp nhận token ký bằng thuật toán khác với thuật toán hệ thống dùng.
+- **Ảnh hưởng:** một dòng trong `authMiddleware.js`; ST-10 vẫn PASS.
+
 ## Sau phản hồi Bài tập 2 – Buổi 14 (ngày 06/11/2026)
 
 Phản hồi BT2: TC3 10,0 · TC4 9,3 · mục kiểm chứng bảng 4.2 **đạt đủ**. Hai góp ý trừ điểm ở TC4 đều có quyết định dưới đây (TD-21, TD-22); TD-23 là thay đổi của Buổi 14.
