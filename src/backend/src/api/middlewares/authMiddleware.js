@@ -8,7 +8,7 @@ function authenticate(req, _res, next) {
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return next(new AppError(401, 'UNAUTHORIZED', 'Thiếu JWT trong header Authorization'));
   try {
-    const p = jwt.verify(token, config.jwtSecret);
+    const p = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] }); // chỉ nhận đúng thuật toán đã ký – chặn alg "none"/đổi thuật toán
     req.ctx = { staffId: p.staffId, role: p.role, centerCode: p.centerCode, fullName: p.fullName };
     return next();
   } catch {
