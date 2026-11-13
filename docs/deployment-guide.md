@@ -117,7 +117,7 @@ Steps taken to deploy:
 1. Sign in at https://render.com with GitHub and allow access to this repository.
 2. **New → Blueprint**, choose the repository and branch `main`. Render reads `render.yaml` and lists 3 resources: `smartcrm-l2-db` (PostgreSQL, free, Singapore), `smartcrm-l2-api` (Docker, free) and `smartcrm-l2-web` (static site).
 3. When prompted for the `sync: false` variables, enter `FRONTEND_ORIGIN = https://smartcrm-l2-web.onrender.com` and `API_BASE_URL = https://smartcrm-l2-api.onrender.com/api`. Then **Deploy Blueprint**.
-4. The API image is built from the same `src/backend/Dockerfile` used by Docker Compose. On start it runs `migrate.js` and `seed-mau.js` (sample data: 667 customers / 293 devices / 122 tickets), then the server. Render marks it *Live* when `GET /health` returns 200.
+4. The API image is built from the same `src/backend/Dockerfile` used by Docker Compose. On start, `scripts/start-prod.js` runs `migrate.js` and `seed-mau.js` (sample data: 667 customers / 293 devices / 122 tickets), then the server. The first deploy used `sh -c "… && …"` like Docker Compose and failed with *exit status 127*, because Render passed the whole quoted string to `sh` as one command name. A Node start script avoids any shell quoting. Render marks it *Live* when `GET /health` returns 200.
 5. If Render gave a service a different URL (name taken), edit `FRONTEND_ORIGIN` on the API and `API_BASE_URL` on the web in **Environment**, then **Manual Deploy → Deploy latest commit** for that service.
 6. Verify: `curl -s <API>/health` → `{"status":"OK","db":"OK",…}`. Open the web URL, sign in as `nv01`, and check that the ticket list (M1) loads. Every push to `main` redeploys both services automatically.
 

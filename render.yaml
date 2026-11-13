@@ -10,8 +10,9 @@ services:
     region: singapore
     dockerContext: .
     dockerfilePath: ./src/backend/Dockerfile
-    # Giống docker-compose.yml: migrate + nạp dữ liệu mẫu (chạy lại không nhân đôi – C8) rồi mới mở API
-    dockerCommand: sh -c "node scripts/migrate.js && node scripts/seed-mau.js && node src/server.js"
+    # Giống docker-compose.yml: migrate + nạp dữ liệu mẫu (chạy lại không nhân đôi – C8) rồi mới mở API.
+    # Dùng script Node, không dùng sh -c "a && b": Render tách chuỗi lệnh khác Compose (lỗi status 127 lần deploy đầu).
+    dockerCommand: node scripts/start-prod.js
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
