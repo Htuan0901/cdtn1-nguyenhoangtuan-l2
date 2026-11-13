@@ -1,11 +1,14 @@
 # BẮT BUỘC: không đưa node_modules của máy, .env thật, lịch sử git vào image
 **/node_modules
 .git
+.github
+.githooks
 .env
 *.env.local
-docs
-tests
 db
 *.pdf
 *.docx
 **/.DS_Store
+# docs/: chỉ các tệp .md được chép vào image (Dockerfile); ảnh chụp thì không
+docs/screenshots
+# tests/ ĐƯỢC đưa vào image để chạy toàn bộ bộ test trong container (BUG-14, TD-24)
