@@ -1,0 +1,91 @@
+
+> smartcrm-l2-backend@0.2.0 st
+> node -r ./scripts/load-env.js scripts/system-test.js
+
+Test hệ thống trên http://localhost:3000/api · 20:54:33 13/11/2026
+
+━━ ST-01 · Luồng đúng · Ưu tiên Cao — Tạo phiếu cho thiết bị còn bảo hành (UC04 · QT-05 · QT-A1 · QT-15)
+   Tiền đk : khách 090****601 mới · thiết bị ST-78073566-2 mua 2026-10-14, BH 12 tháng · đăng nhập nv01
+   Bước    : POST /api/tickets {customerId, deviceId, issueDesc, categoryCode: PIN} (không gửi priority)
+   Mong đợi: 201 · MOI · CON_BAO_HANH · ưu tiên TRUNG_BINH (mặc định nhóm PIN) · SĐT che dạng 09x****xxx · ticket +1 · log +1
+   Thực tế : 201 · MOI · CON_BAO_HANH · TRUNG_BINH · BH-000126/2026 · SĐT 090****601 · ticket 123 → 124 (+1) · log 124 → 125 (+1)
+   KẾT QUẢ : PASS
+
+━━ ST-02 · Luồng đúng · Ưu tiên Cao — Thiếu ngày mua → Chờ xác minh → Quản lý chấp nhận (UC04-8a · UC07 · QT-06)
+   Tiền đk : khách 090****603 mới · thiết bị ST-78073566-4 KHÔNG có ngày mua
+   Bước    : 1. nv01: POST /api/tickets · 2. ql01: POST /api/tickets/{mã}/review {CHAP_NHAN, note}
+   Mong đợi: B1: 201 CHO_XAC_MINH / CHUA_XAC_MINH · B2: 200 MOI / CON_BAO_HANH, lịch sử 2 dòng · ticket +1 · log +2
+   Thực tế : B1: 201 CHO_XAC_MINH / CHUA_XAC_MINH · B2: 200 MOI / CON_BAO_HANH, lịch sử 2 dòng · ticket 124 → 125 (+1) · log 125 → 127 (+2)
+   KẾT QUẢ : PASS
+
+━━ ST-03 · Giá trị biên · Ưu tiên Cao — Tiếp nhận ĐÚNG ngày hết hạn bảo hành → vẫn Còn bảo hành (QT-05, phía trong ranh giới)
+   Tiền đk : thiết bị mua 2025-11-13, BH 12 tháng → hết hạn 2026-11-13 = hôm nay
+   Bước    : POST /api/tickets hôm nay
+   Mong đợi: 201 · CON_BAO_HANH · MOI
+   Thực tế : 201 · CON_BAO_HANH · MOI · BH-000128/2026
+   KẾT QUẢ : PASS
+
+━━ ST-04 · Giá trị biên · Ưu tiên Cao — Tiếp nhận sau hạn bảo hành 1 ngày → Hết bảo hành (QT-05, phía ngoài ranh giới)
+   Tiền đk : thiết bị mua 2025-11-12, BH 12 tháng → hết hạn 2026-11-12 = hôm qua
+   Bước    : POST /api/tickets hôm nay
+   Mong đợi: 201 · HET_BAO_HANH · phiếu vẫn MOI (vẫn tiếp nhận, sửa có tính phí)
+   Thực tế : 201 · HET_BAO_HANH · MOI · BH-000129/2026
+   KẾT QUẢ : PASS
+
+━━ ST-05 · Giá trị biên · Ưu tiên Trung bình — Mô tả lỗi 5.000 ký tự được nhận, 5.001 ký tự bị từ chối (api-contract E7)
+   Tiền đk : khách 090****609, thiết bị ST-78073566-10 mới
+   Bước    : 1. POST /api/tickets issueDesc = 5.000 ký tự · 2. issueDesc = 5.001 ký tự
+   Mong đợi: B1: 201 · B2: 400 VALIDATION_ERROR [issueDesc] · ticket +1 (chỉ B1)
+   Thực tế : B1: 201 · B2: 400 VALIDATION_ERROR [issueDesc] · ticket 127 → 128 (+1)
+   KẾT QUẢ : PASS
+
+━━ ST-06 · Dữ liệu sai · Ưu tiên Cao — Trường bắt buộc trống / sai enum → 400 nêu rõ trường, KHÔNG ghi gì (UC04-10a)
+   Tiền đk : khách 090****611, thiết bị ST-78073566-12 hợp lệ
+   Bước    : POST /api/tickets {issueDesc: "   ", categoryCode: "LOA"}
+   Mong đợi: 400 VALIDATION_ERROR [issueDesc, categoryCode] · ticket +0 · log +0
+   Thực tế : 400 VALIDATION_ERROR [issueDesc, categoryCode] · ticket 128 → 128 (+0) · log 130 → 130 (+0)
+   KẾT QUẢ : PASS
+
+━━ ST-07 · Dữ liệu sai · Ưu tiên Trung bình — Id / mã không tồn tại → 404, KHÔNG phải 500
+   Tiền đk : không có khách hàng id 2147483647, 999999; không có phiếu BH-999999/2099
+   Bước    : 1. POST /api/tickets customerId = 2147483647 · 2. GET /api/customers/999999 · 3. GET /api/tickets/BH-999999%2F2099
+   Mong đợi: B1: 404 CUSTOMER_NOT_FOUND · B2: 404 CUSTOMER_NOT_FOUND · B3: 404 TICKET_NOT_FOUND · ticket +0
+   Thực tế : B1: 404 CUSTOMER_NOT_FOUND · B2: 404 CUSTOMER_NOT_FOUND · B3: 404 TICKET_NOT_FOUND · ticket 128 → 128 (+0)
+   KẾT QUẢ : PASS
+
+━━ ST-08 · Dữ liệu sai · Ưu tiên Trung bình — Tham số q gửi dạng mảng / đối tượng → 400, KHÔNG phải 500
+   Tiền đk : đăng nhập nv01
+   Bước    : 1. GET /api/tickets?q=0901234567&q=BH-000001 · 2. GET /api/tickets?q[x]=1
+   Mong đợi: B1: 400 VALIDATION_ERROR [q] · B2: 400 VALIDATION_ERROR [q]
+   Thực tế : B1: 400 VALIDATION_ERROR [q] · B2: 400 VALIDATION_ERROR [q]
+   KẾT QUẢ : PASS
+
+━━ ST-09 · Dữ liệu sai · Ưu tiên Thấp — Body lớn hơn 100 KB → 413, KHÔNG phải 500
+   Tiền đk : đăng nhập nv01; giới hạn body JSON của API là 100 KB
+   Bước    : POST /api/customers với fullName dài 120.000 ký tự (≈ 117 KB)
+   Mong đợi: 413 PAYLOAD_TOO_LARGE · customer +0
+   Thực tế : 413 PAYLOAD_TOO_LARGE · customer 673 → 673 (+0)
+   KẾT QUẢ : PASS
+
+━━ ST-10 · Bảo mật · Ưu tiên Cao — Phân quyền: thiếu/giả token → 401; khác trung tâm, sai vai trò → 403 (QT-14, NFR4)
+   Tiền đk : nv01 (TT-CT01) vừa tạo phiếu BH-000131/2026; nv02 thuộc TT-CT02
+   Bước    : 1. GET /api/tickets không token · 2. token giả alg "none" · 3. nv02 GET phiếu của TT-CT01 · 4. nv01 DELETE /api/customers/{id}
+   Mong đợi: B1: 401 · B2: 401 · B3: 403 FORBIDDEN · B4: 403 FORBIDDEN · customer +0
+   Thực tế : B1: 401 UNAUTHORIZED · B2: 401 UNAUTHORIZED · B3: 403 FORBIDDEN · B4: 403 FORBIDDEN · customer 674 → 674 (+0)
+   KẾT QUẢ : PASS
+
+━━ ST-11 · Bảo mật · Ưu tiên Cao — Không có mật khẩu / chuỗi kết nối có mật khẩu trong tài liệu repo (phản hồi BT2)
+   Tiền đk : quét 19 tệp tài liệu/cấu hình đã commit (README, docs/**/*.md, docker-compose.yml, .env.example)
+   Bước    : tìm chuỗi postgres://user:MẬT_KHẨU@ và POSTGRES_PASSWORD=giá_trị (bỏ qua ${BIẾN} và giá trị mẫu của .env.example)
+   Mong đợi: 0 vị trí lộ mật khẩu
+   Thực tế : 0 vị trí
+   KẾT QUẢ : PASS
+
+━━ ST-12 · Tái lập · Ưu tiên Cao — Chạy lại migrate + seed lần nữa → không lỗi, không nhân đôi dữ liệu (C5)
+   Tiền đk : CSDL đã migrate + seed ít nhất một lần
+   Bước    : chạy lại scripts/migrate.js rồi scripts/seed-mau.js; đếm 6 bảng trước/sau
+   Mong đợi: migrate mã thoát 0, bỏ qua 3 migration · seed mã thoát 0 · cả 6 bảng +0
+   Thực tế : migrate thoát 0, bỏ qua 3 · seed thoát 0 · customer +0 · device +0 · ticket +0 · ticket_status_log +0 · issue_category +0 · staff +0
+   KẾT QUẢ : PASS
+
+TỔNG: 12/12 PASS
