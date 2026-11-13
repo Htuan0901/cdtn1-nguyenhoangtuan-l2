@@ -25,6 +25,12 @@ Thay đổi so với bản nộp BT2 (tag `v0.2`) và Buổi 14 để đạt m�
 - **Lý do:** Thư viện đã từ chối `alg: none` (ST-10 bước 2 PASS từ trước, nên đây **không phải bug**). Ghi rõ thuật toán là phòng thủ thêm: không chấp nhận token ký bằng thuật toán khác với thuật toán hệ thống dùng.
 - **Ảnh hưởng:** một dòng trong `authMiddleware.js`; ST-10 vẫn PASS.
 
+### TD-27 Bản deploy công khai trên Render (điểm cộng BT3 mục 3.3)
+- **Phản hồi của GV:** (Buổi 16, đề BT3 mục 3.3) Điểm cộng nếu deploy thử: đường dẫn công khai mở được lúc chấm, biến môi trường cấu hình đúng trên nền tảng, Deployment Guide có mục ghi các bước deploy.
+- **Quyết định:** BỔ SUNG `render.yaml` (Render Blueprint) gồm 3 tài nguyên miễn phí, vùng Singapore: PostgreSQL 16 được quản lý, API build từ đúng `src/backend/Dockerfile`, giao diện là trang tĩnh. SỬA giao diện: `src/config.js` đọc `window.__API_BASE_URL__`, giá trị do `/env.js` đặt (`index.html` nạp trước `main.js`). Trên Render, `/env.js` sinh lúc build từ biến `API_BASE_URL`; `server.js` cũng phục vụ `/env.js` từ cùng biến đó. Không đặt biến thì dùng mặc định `http://localhost:3000/api`, nên docker compose và phép thử máy trắng không đổi. Deployment Guide thêm mục 7.
+- **Lý do:** Địa chỉ API trước đây ghi cứng trong mã, nên chỉ chạy được trên máy. Đọc lúc chạy thì cùng mã nguồn chạy được ở máy, CI và bản công khai. Secret không nằm trong repo: `DATABASE_URL` do Render cấp từ CSDL, `JWT_SECRET` do Render tự sinh. Giao diện tĩnh không bị ngủ và không tốn giờ chạy miễn phí.
+- **Ảnh hưởng:** `render.yaml`, `src/frontend/src/config.js`, `src/frontend/index.html`, `src/frontend/server.js`, `docs/deployment-guide.md` §7, README. Không đổi API, CSDL, test. Bản miễn phí ngủ sau 15 phút, CSDL hết hạn sau 30 ngày (ghi trong Guide).
+
 ## Sau phản hồi Bài tập 2 – Buổi 14 (ngày 06/11/2026)
 
 Phản hồi BT2: TC3 10,0 · TC4 9,3 · mục kiểm chứng bảng 4.2 **đạt đủ**. Hai góp ý trừ điểm ở TC4 đều có quyết định dưới đây (TD-21, TD-22); TD-23 là thay đổi của Buổi 14.

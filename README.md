@@ -16,6 +16,8 @@ docker compose up -d --build
 Kiểm tra: `docker compose ps` (3 dịch vụ `healthy`) · `curl -s http://localhost:3000/health` → `{"status":"OK","db":"OK",…}` · mở **http://localhost:5173**.
 Chạy bộ test trong container: `docker compose exec -T api npm test` (64/64) · 12 test case của Test Report: `docker compose exec -T api npm run st` (12/12).
 
+**Bản chạy thử công khai (Render, miễn phí):** giao diện https://smartcrm-l2-web.onrender.com · API https://smartcrm-l2-api.onrender.com. Cấu hình trong `render.yaml`, các bước ở Deployment Guide §7. Bản miễn phí ngủ sau 15 phút: mở `/health` trước khoảng 1 phút.
+
 ## 1. Mô tả bài toán và phạm vi
 Khách hàng mang thiết bị đến trung tâm bảo hành → nhân viên tiếp nhận tra cứu khách hàng theo số điện thoại → ghi nhận thiết bị (Serial/IMEI) → nhập mô tả lỗi, chọn nhóm sự cố và mức ưu tiên → hệ thống kiểm tra điều kiện bảo hành, tính hạn cam kết → **phiếu bảo hành được tạo ở trạng thái “Mới”** (thiếu ngày mua: “Chờ xác minh bảo hành”, Quản lý trung tâm bảo hành xét duyệt rồi chuyển “Mới”).
 
