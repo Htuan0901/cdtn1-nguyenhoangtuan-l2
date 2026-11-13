@@ -58,3 +58,51 @@ jobs:
       - name: In log API khi có bước lỗi
         if: failure()
         run: cat api.log || true
+
+  # Bài tập 3 – PHÉP THỬ MÁY TRẮNG tự động: trên máy sạch của GitHub làm ĐÚNG Deployment Guide
+  # (cp .env.example .env → docker compose up -d --build) rồi kiểm theo mục "Verify it works" và chạy MỌI bộ test TRONG container.
+  dong-goi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bước 3 của Guide – tạo .env từ .env.example (giá trị mẫu)
+        run: cp .env.example .env
+      - name: Bước 4 của Guide – dựng cả hệ thống, chờ mọi dịch vụ healthy
+        run: docker compose up -d --build --wait --wait-timeout 180
+      - name: Verify 1 – trạng thái dịch vụ
+        run: docker compose ps
+      - name: Verify 2 – /health trả OK
+        run: curl -sf http://localhost:3000/health | grep -q '"status":"OK"'
+      - name: Verify 3 – giao diện trả trang
+        run: curl -sf http://localhost:5173/ > /dev/null
+      - name: Verify 4 – dữ liệu mẫu đúng số bản ghi, chạy seed lần 2 không nhân đôi (C8)
+        run: |
+          dem() { docker compose exec -T db psql -U postgres -d smartcrm -tAc \
+            "SELECT (SELECT count(*) FROM customer)||'/'||(SELECT count(*) FROM device)||'/'||(SELECT count(*) FROM ticket)"; }
+          test "$(dem)" = "667/293/122"
+          docker compose exec -T api npm run migrate
+          docker compose exec -T api npm run seed
+          test "$(dem)" = "667/293/122"
+      - name: Verify 5 – unit test TRONG container
+        run: docker compose exec -T api npm test
+      - name: Test repository, e2e, CRUD TRONG container
+        run: |
+          docker compose exec -T api npm run test:repo
+          docker compose exec -T api npm run e2e
+          docker compose exec -T api npm run crud
+      - name: Verify 6 – 12 test case hệ thống TRONG container (Test Report)
+        run: docker compose exec -T api npm run st
+      - name: Tài liệu API khớp hệ thống thật – 17 endpoint, đúng mã HTTP (C9, S1)
+        run: node src/backend/scripts/api-examples.js
+      - name: Log không lộ mật khẩu / token / SĐT
+        run: |
+          docker compose logs api > api.log
+          ! grep -iE '"(password|token|authorization|phone)":"[^[]' api.log   # giá trị phải là [ĐÃ CHE]
+          ! grep -E '0[0-9]{9}' api.log
+      - name: In log khi có bước lỗi
+        if: failure()
+        run: docker compose logs --tail 150
+      - name: Dọn
+        if: always()
+        run: docker compose down -v
