@@ -14,7 +14,7 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542 · track SE · Kế ho
 | Lần 2 | như trên | `npm run test:repo` · `npm run e2e` · `npm run crud` | 8/8 · 10/10 bước · 17/17 bước | `docs/screenshots/tich-hop.png` |
 | Lần 3 | tag `v1.0`, trong container (máy trắng) | `docker compose exec -T api npm test` | **64/64 PASS** | `docs/screenshots/bt3-npm-test.png` |
 | Lần 3 | như trên | `docker compose exec -T api npm run st` | **12/12 PASS** | `docs/screenshots/bt3-st.png` |
-| Lần 3 | như trên | `… npm run test:repo` · `… npm run e2e` · `… npm run crud` | 8/8 · 10/10 bước · 17/17 bước | `bt3-tich-hop-1.png` (repo) · `-3.png` (e2e) · `-2.png` (crud) |
+| Lần 3 | như trên | `… npm run test:repo` · `… npm run e2e` · `… npm run crud` | 8/8 · 10/10 bước · 17/17 bước | `bt3-tich-hop-1.png` (repo) · `-2.png` (e2e) · `-3.png` (crud) |
 
 Trước khi sửa BUG-14, lần 3 **không chạy được**: trên mã của Buổi 14, `docker compose exec -T api npm test` báo không tìm thấy tệp test, và `npm run st` dừng vì không có `.env` (ảnh `BUG-14-truoc.png`). Ba FAIL của lần 1 được ghi trung thực, gỡ theo bốn bước và ghi `docs/bug-log.md` ngay khi gặp: ST-11 → **BUG-11 (Critical)**, ST-08 → **BUG-12**, ST-09 → **BUG-13**; mỗi bug một commit `fix(…): … (BUG-xx)`. Chạy lại một test case bất kỳ: `npm run st -- ST-xx`.
 
