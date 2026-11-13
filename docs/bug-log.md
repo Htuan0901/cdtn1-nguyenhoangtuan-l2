@@ -1,6 +1,6 @@
 # Bug Log – Smart CRM · Luồng L2 (track SE)
 
-Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Buổi 11 (Buổi 13 – 14: từ BUG-11 trở đi mỗi bug một commit riêng `fix(…): … (BUG-xx)`); mỗi lỗi được gỡ theo bốn bước
+Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Buổi 11 (Buổi 13 – 16: từ BUG-11 trở đi mỗi bug một commit riêng `fix(…): … (BUG-xx)`); mỗi lỗi được gỡ theo bốn bước
 **tái lập → khoanh vùng → sửa nguyên nhân → xác nhận bằng test**. Dòng 5 ghi NGUYÊN NHÂN, không ghi triệu chứng.
 
 | Mã | Mức độ | Tóm tắt | Phát hiện | Commit sửa | Test xác nhận |
@@ -18,6 +18,20 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | BUG-11 | **Critical** | Mật khẩu PostgreSQL ghi trong README, TD-11 và `.env.example` của repo public | Buổi 14 – phản hồi BT2, ST-11 | [d8334bc](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/d8334bc212de71035789147bb00d26e12ae4c8be) | ST-11, TC-46 |
 | BUG-12 | Minor | `GET /api/tickets?q=a&q=b` (hoặc `q[x]=1`) trả 500 thay vì 400 | Buổi 14 – ST-08 | [e4632c0](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/e4632c08c45b0abf3bad5e49d344f6f269bc893c) | ST-08, TC-43, TC-44 |
 | BUG-13 | Minor | Body JSON lớn hơn 100 KB trả 500 thay vì 413 | Buổi 14 – ST-09 | [3674a17](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/3674a17ed0e32e8e4bcbb85b57fc66169d5a58c5) | ST-09, TC-45 |
+| BUG-14 | Major | Bộ test không chạy được trong container: `npm test` không thấy tệp test, `npm run st` đòi tệp `.env` | Buổi 15 – phép thử máy trắng bước 5 | [91b2894](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/91b2894fe1afe17f6c4680807d21012dd8d5e425) | TC-47…TC-49, CI job `dong-goi`, Deployment Guide §5 bước 5–9 |
+
+---
+
+### BUG-14 · Major – Bộ test không chạy được trong container của gói đóng gói
+| Dòng | Nội dung |
+|---|---|
+| 1. Mã và mức độ | BUG-14 · **Major** – hệ thống vẫn lên được, nhưng chức năng quan trọng của gói bàn giao hỏng: người nhận (giảng viên) **không chạy được bộ test** bằng lệnh trong Guide, nên không kiểm chứng được Test Report (mục cốt lõi C3). Có cách làm khác (cài Node.js 20 trên máy, mở cổng 5432 cho CSDL rồi chạy ngoài container), nên chưa tới mức Critical |
+| 2. Phát hiện bởi | Phép thử máy trắng lần đầu (Buổi 15, đề BT3 mục 2.4 bước 5): sau `docker compose up -d --build`, chạy lệnh test trong container |
+| 3. Triệu chứng | Trên mã Buổi 14 (commit `0493a95`), cả 3 dịch vụ đều healthy, nhưng: (a) `docker compose exec -T api npm test` dừng ngay với **`Could not find '…/tests/backend/slaPolicy.test.js'`**, 0 test được chạy; (b) `docker compose exec -T api npm run st` dừng với **`node: ../../.env: not found`**, không test case nào chạy. Ảnh `BUG-14-truoc.png` |
+| 4. Cách tái lập | `git checkout 0493a95` → `cp .env.example .env` → `docker compose up -d --build` → chờ healthy → hai lệnh ở dòng 3. Chạy mỗi lệnh 3 lần: tái lập **3/3 lần** |
+| 5. Nguyên nhân | Hai nguyên nhân trong cấu hình đóng gói, không nằm trong mã nghiệp vụ. **(1) Bố cục image khác bố cục repo:** `src/backend/Dockerfile` chép mã vào `/app` và `.dockerignore` loại hẳn thư mục `tests/`. Trong khi đó script `npm test` trỏ tới `../../tests/backend/*.test.js`, và các test `require('../../src/backend/src/…')`, tức là giả định mã nằm ở `<gốc>/src/backend`. Từ `/app`, đường dẫn `../../tests` thành `/tests`, không tồn tại. **(2) Script npm bắt buộc có tệp `.env`:** các script `st`, `e2e`, `crud`, `test:repo` (và `migrate`, `seed`) dùng cờ `node --env-file=../../.env`. Cờ này dừng chương trình khi không có tệp, nhưng trong container không có (và không được có) `.env`, vì biến môi trường do docker compose truyền vào. Lỗi không lộ ra ở BT2 vì mọi bộ test chỉ được chạy trên máy dev, nơi có sẵn `tests/` và `.env` |
+| 6. Cách sửa | `src/backend/Dockerfile`: WORKDIR `/repo/src/backend`, chép `tests/` → `/repo/tests`, `data/mau` → `/repo/data/mau`, `docs/*.md` + README + `docker-compose.yml` + `.env.example` → `/repo` (ST-11 quét các tệp này). Image có cùng bố cục với repo, và vẫn không chứa `.env`. `.dockerignore`: bỏ dòng `tests`, đổi `docs` thành `docs/screenshots`. Thêm `scripts/load-env.js`: nạp `../../.env` **nếu có**, không ghi đè biến đã có (giống quy tắc của `--env-file`). `package.json`: mọi script dùng `node -r ./scripts/load-env.js` thay cho `--env-file` |
+| 7. Commit và xác nhận | [91b2894](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/91b2894fe1afe17f6c4680807d21012dd8d5e425) · Test hồi quy TC-47, TC-48, TC-49 FAIL trên mã cũ (chưa có `load-env.js`, `.dockerignore` loại `tests`), PASS sau khi sửa · phép thử máy trắng lại từ thư mục trống: `npm test` 64/64, `npm run st` 12/12 trong container (ảnh `bt3-npm-test.png`, `bt3-st.png`) · CI job `dong-goi` xanh |
 
 ---
 
