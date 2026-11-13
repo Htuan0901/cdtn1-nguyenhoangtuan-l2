@@ -93,7 +93,20 @@ Enumerations:
 - **Limits:** none. It is cheap enough to poll every 10 s.
 
 <!-- vd:health -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /health
+```
+Response `200`
+```json
+{
+  "status": "OK",
+  "db": "OK",
+  "service": "smartcrm-l2"
+}
+```
 <!-- /vd:health -->
 
 ### 2.2 `POST /api/auth/login`
@@ -112,7 +125,43 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** the token lives 8 h. Passwords are stored as salted scrypt hashes.
 
 <!-- vd:login -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{"username":"nv01","password":"<sample password>"}
+```
+Response `200`
+```json
+{
+  "token": "eyJ…(redacted)",
+  "staff": {
+    "staffId": 1,
+    "role": "NV_TIEP_NHAN",
+    "centerCode": "TT-CT01",
+    "fullName": "Trần Thị Bình",
+    "username": "nv01"
+  }
+}
+```
+
+*Error*
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{"username":"nv01","password":"wrong-password"}
+```
+Response `401`
+```json
+{
+  "code": "INVALID_CREDENTIALS",
+  "message": "Sai tên đăng nhập hoặc mật khẩu"
+}
+```
 <!-- /vd:login -->
 
 ### 2.3 `POST /api/customers/lookup`
@@ -130,7 +179,52 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** POST is used so the phone number never appears in a URL or an access log.
 
 <!-- vd:lookup -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+POST /api/customers/lookup
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"phone":"+84 901 234 567"}
+```
+Response `200`
+```json
+{
+  "customerId": 1,
+  "fullName": "Nguyễn Minh Anh",
+  "phone": "090****567",
+  "devices": [
+    {
+      "deviceId": 1,
+      "serialImei": "MM-IMEI-000123",
+      "modelName": "Mekong X5",
+      "purchaseDate": "2026-03-15",
+      "warrantyMonths": 12
+    }
+  ]
+}
+```
+
+*Error*
+```http
+POST /api/customers/lookup
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"phone":"09012"}
+```
+Response `400`
+```json
+{
+  "code": "INVALID_PHONE",
+  "message": "Số điện thoại không hợp lệ: cần 10 chữ số, bắt đầu bằng 0",
+  "fields": [
+    "phone"
+  ]
+}
+```
 <!-- /vd:lookup -->
 
 ### 2.4 `GET /api/customers`
@@ -147,7 +241,46 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** 20 rows per page, newest customer first.
 
 <!-- vd:list-customers -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /api/customers?q=0901%20234%20567
+Authorization: Bearer <JWT of nv01>
+```
+Response `200`
+```json
+{
+  "page": 1,
+  "pageSize": 20,
+  "total": 1,
+  "items": [
+    {
+      "customerId": 1,
+      "fullName": "Nguyễn Minh Anh",
+      "phone": "090****567",
+      "deviceCount": 1,
+      "ticketCount": 1
+    }
+  ]
+}
+```
+
+*Error*
+```http
+GET /api/customers?page=10001
+Authorization: Bearer <JWT of nv01>
+```
+Response `400`
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "Dữ liệu không hợp lệ",
+  "fields": [
+    "page"
+  ]
+}
+```
 <!-- /vd:list-customers -->
 
 ### 2.5 `GET /api/customers/{id}`
@@ -165,7 +298,43 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:get-customer -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /api/customers/1
+Authorization: Bearer <JWT of ql01>
+```
+Response `200`
+```json
+{
+  "customerId": 1,
+  "fullName": "Nguyễn Minh Anh",
+  "phone": "0901234567",
+  "devices": [
+    {
+      "deviceId": 1,
+      "serialImei": "MM-IMEI-000123",
+      "modelName": "Mekong X5",
+      "purchaseDate": "2026-03-15",
+      "warrantyMonths": 12
+    }
+  ]
+}
+```
+
+*Error*
+```http
+GET /api/customers/999999
+Authorization: Bearer <JWT of nv01>
+```
+Response `404`
+```json
+{
+  "code": "CUSTOMER_NOT_FOUND",
+  "message": "Không tìm thấy khách hàng"
+}
+```
 <!-- /vd:get-customer -->
 
 ### 2.6 `POST /api/customers`
@@ -185,7 +354,41 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:create-customer -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+POST /api/customers
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"fullName":"API Example Customer","phone":"0978291319"}
+```
+Response `201`
+```json
+{
+  "customerId": 685,
+  "fullName": "API Example Customer",
+  "phone": "097****319",
+  "devices": []
+}
+```
+
+*Error*
+```http
+POST /api/customers
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"fullName":"Duplicate Phone","phone":"0978291319"}
+```
+Response `409`
+```json
+{
+  "code": "PHONE_EXISTS",
+  "message": "Số điện thoại đã có hồ sơ khách hàng – dùng Tra cứu"
+}
+```
 <!-- /vd:create-customer -->
 
 ### 2.7 `PATCH /api/customers/{id}`
@@ -205,7 +408,44 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:update-customer -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+PATCH /api/customers/685
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"fullName":"API Example Customer (edited)"}
+```
+Response `200`
+```json
+{
+  "customerId": 685,
+  "fullName": "API Example Customer (edited)",
+  "phone": "097****319",
+  "devices": []
+}
+```
+
+*Error*
+```http
+PATCH /api/customers/685
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{}
+```
+Response `400`
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "Dữ liệu không hợp lệ",
+  "fields": [
+    "body"
+  ]
+}
+```
 <!-- /vd:update-customer -->
 
 ### 2.8 `DELETE /api/customers/{id}`
@@ -224,7 +464,28 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:delete-customer -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+DELETE /api/customers/686
+Authorization: Bearer <JWT of ql01>
+```
+Response `204`
+_(no body)_
+
+*Error*
+```http
+DELETE /api/customers/685
+Authorization: Bearer <JWT of ql01>
+```
+Response `409`
+```json
+{
+  "code": "CUSTOMER_IN_USE",
+  "message": "Khách hàng đã có thiết bị hoặc phiếu bảo hành – không thể xoá"
+}
+```
 <!-- /vd:delete-customer -->
 
 ### 2.9 `POST /api/devices`
@@ -245,7 +506,43 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:register-device -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+POST /api/devices
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"customerId":685,"serialImei":"API-EX-78291319","modelName":"Mekong X5","purchaseDate":"2026-10-14","warrantyMonths":12}
+```
+Response `201`
+```json
+{
+  "deviceId": 311,
+  "serialImei": "API-EX-78291319",
+  "modelName": "Mekong X5",
+  "purchaseDate": "2026-10-14",
+  "warrantyMonths": 12,
+  "created": true
+}
+```
+
+*Error*
+```http
+POST /api/devices
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"customerId":685,"serialImei":"MM-IMEI-000123"}
+```
+Response `409`
+```json
+{
+  "code": "DEVICE_OWNED_BY_OTHER",
+  "message": "Serial/IMEI đã thuộc khách hàng khác – không thể liên kết"
+}
+```
 <!-- /vd:register-device -->
 
 ### 2.10 `GET /api/devices/{id}`
@@ -263,7 +560,37 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:get-device -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /api/devices/311
+Authorization: Bearer <JWT of nv01>
+```
+Response `200`
+```json
+{
+  "deviceId": 311,
+  "serialImei": "API-EX-78291319",
+  "modelName": "Mekong X5",
+  "purchaseDate": "2026-10-14",
+  "warrantyMonths": 12,
+  "customerId": 685
+}
+```
+
+*Error*
+```http
+GET /api/devices/999999
+Authorization: Bearer <JWT of nv01>
+```
+Response `404`
+```json
+{
+  "code": "DEVICE_NOT_FOUND",
+  "message": "Không tìm thấy thiết bị"
+}
+```
 <!-- /vd:get-device -->
 
 ### 2.11 `PATCH /api/devices/{id}`
@@ -282,7 +609,47 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:update-device -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+PATCH /api/devices/311
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"warrantyMonths":24}
+```
+Response `200`
+```json
+{
+  "deviceId": 311,
+  "serialImei": "API-EX-78291319",
+  "modelName": "Mekong X5",
+  "purchaseDate": "2026-10-14",
+  "warrantyMonths": 24,
+  "customerId": 685
+}
+```
+
+*Error*
+```http
+PATCH /api/devices/311
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"serialImei":"NEW-SERIAL"}
+```
+Response `400`
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "Dữ liệu không hợp lệ",
+  "fields": [
+    "body",
+    "serialImei"
+  ]
+}
+```
 <!-- /vd:update-device -->
 
 ### 2.12 `DELETE /api/devices/{id}`
@@ -301,7 +668,28 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:delete-device -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+DELETE /api/devices/313
+Authorization: Bearer <JWT of ql01>
+```
+Response `204`
+_(no body)_
+
+*Error*
+```http
+DELETE /api/devices/313
+Authorization: Bearer <JWT of nv01>
+```
+Response `403`
+```json
+{
+  "code": "FORBIDDEN",
+  "message": "Không đủ quyền thực hiện thao tác này"
+}
+```
 <!-- /vd:delete-device -->
 
 ### 2.13 `GET /api/issue-categories`
@@ -313,7 +701,62 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** none.
 
 <!-- vd:categories -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /api/issue-categories
+Authorization: Bearer <JWT of nv01>
+```
+Response `200`
+```json
+{
+  "items": [
+    {
+      "code": "NUOC_VAO",
+      "name": "Nước vào",
+      "defaultPriority": "CAO"
+    },
+    {
+      "code": "MAN_HINH",
+      "name": "Màn hình",
+      "defaultPriority": "TRUNG_BINH"
+    },
+    {
+      "code": "PIN",
+      "name": "Pin",
+      "defaultPriority": "TRUNG_BINH"
+    },
+    {
+      "code": "SAC",
+      "name": "Sạc",
+      "defaultPriority": "TRUNG_BINH"
+    },
+    {
+      "code": "PHAN_MEM",
+      "name": "Phần mềm",
+      "defaultPriority": "THAP"
+    },
+    {
+      "code": "KHAC",
+      "name": "Khác",
+      "defaultPriority": "THAP"
+    }
+  ]
+}
+```
+
+*Error*
+```http
+GET /api/issue-categories
+```
+Response `401`
+```json
+{
+  "code": "UNAUTHORIZED",
+  "message": "Thiếu JWT trong header Authorization"
+}
+```
 <!-- /vd:categories -->
 
 ### 2.14 `POST /api/tickets`
@@ -338,7 +781,61 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** `issueDesc` ≤ 5,000 characters. Ticket codes are unique under concurrent requests.
 
 <!-- vd:create-ticket -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+POST /api/tickets
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"customerId":685,"deviceId":311,"issueDesc":"Pin tụt nhanh, máy nóng khi sạc","categoryCode":"PIN"}
+```
+Response `201`
+```json
+{
+  "ticketCode": "BH-000133/2026",
+  "customerName": "API Example Customer (edited)",
+  "phone": "097****319",
+  "categoryName": "Pin",
+  "priority": "TRUNG_BINH",
+  "status": "MOI",
+  "receivedAt": "2026-11-13T20:58:11.801+07:00",
+  "dueAt": "2026-11-17T20:58:11.801+07:00",
+  "categoryCode": "PIN",
+  "warrantyResult": "CON_BAO_HANH",
+  "issueDesc": "Pin tụt nhanh, máy nóng khi sạc",
+  "centerCode": "TT-CT01",
+  "receivedBy": "Trần Thị Bình",
+  "device": {
+    "deviceId": 311,
+    "serialImei": "API-EX-78291319",
+    "modelName": "Mekong X5",
+    "purchaseDate": "2026-10-14",
+    "warrantyMonths": 24
+  }
+}
+```
+
+*Error*
+```http
+POST /api/tickets
+Authorization: Bearer <JWT of nv01>
+Content-Type: application/json
+
+{"customerId":685,"deviceId":311,"issueDesc":"   ","categoryCode":"LOA"}
+```
+Response `400`
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "Dữ liệu không hợp lệ",
+  "fields": [
+    "issueDesc",
+    "categoryCode"
+  ]
+}
+```
 <!-- /vd:create-ticket -->
 
 ### 2.15 `GET /api/tickets`
@@ -355,7 +852,49 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** 20 rows per page.
 
 <!-- vd:list-tickets -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /api/tickets?q=BH-000133%2F2026
+Authorization: Bearer <JWT of nv01>
+```
+Response `200`
+```json
+{
+  "page": 1,
+  "pageSize": 20,
+  "total": 1,
+  "items": [
+    {
+      "ticketCode": "BH-000133/2026",
+      "customerName": "API Example Customer (edited)",
+      "phone": "097****319",
+      "categoryName": "Pin",
+      "priority": "TRUNG_BINH",
+      "status": "MOI",
+      "receivedAt": "2026-11-13T20:58:11.801+07:00",
+      "dueAt": "2026-11-17T20:58:11.801+07:00"
+    }
+  ]
+}
+```
+
+*Error*
+```http
+GET /api/tickets?status=DONE
+Authorization: Bearer <JWT of nv01>
+```
+Response `400`
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "Dữ liệu không hợp lệ",
+  "fields": [
+    "status"
+  ]
+}
+```
 <!-- /vd:list-tickets -->
 
 ### 2.16 `GET /api/tickets/{ticketCode}`
@@ -373,7 +912,60 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** see §1.5.
 
 <!-- vd:get-ticket -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+GET /api/tickets/BH-000133%2F2026
+Authorization: Bearer <JWT of nv01>
+```
+Response `200`
+```json
+{
+  "ticketCode": "BH-000133/2026",
+  "customerName": "API Example Customer (edited)",
+  "phone": "097****319",
+  "categoryName": "Pin",
+  "priority": "TRUNG_BINH",
+  "status": "MOI",
+  "receivedAt": "2026-11-13T20:58:11.801+07:00",
+  "dueAt": "2026-11-17T20:58:11.801+07:00",
+  "categoryCode": "PIN",
+  "warrantyResult": "CON_BAO_HANH",
+  "issueDesc": "Pin tụt nhanh, máy nóng khi sạc",
+  "centerCode": "TT-CT01",
+  "receivedBy": "Trần Thị Bình",
+  "device": {
+    "deviceId": 311,
+    "serialImei": "API-EX-78291319",
+    "modelName": "Mekong X5",
+    "purchaseDate": "2026-10-14",
+    "warrantyMonths": 24
+  },
+  "history": [
+    {
+      "changedAt": "2026-11-13T20:58:11.805+07:00",
+      "fromStatus": null,
+      "toStatus": "MOI",
+      "changedBy": "Trần Thị Bình",
+      "note": "Tạo phiếu"
+    }
+  ]
+}
+```
+
+*Error*
+```http
+GET /api/tickets/BH-000133%2F2026
+Authorization: Bearer <JWT of nv02 (centre TT-CT02)>
+```
+Response `403`
+```json
+{
+  "code": "FORBIDDEN",
+  "message": "Phiếu thuộc trung tâm khác"
+}
+```
 <!-- /vd:get-ticket -->
 
 ### 2.17 `POST /api/tickets/{ticketCode}/review`
@@ -397,5 +989,71 @@ _Example not captured yet – start the system and run `node src/backend/scripts
 - **Limits:** `note` ≤ 500 characters. A ticket can be reviewed only once.
 
 <!-- vd:review -->
-_Example not captured yet – start the system and run `node src/backend/scripts/api-examples.js`._
+**Real example** – captured 2026-11-13 20:58 (UTC+7) by `node src/backend/scripts/api-examples.js` against `docker compose`.
+
+*Success*
+```http
+POST /api/tickets/BH-000134%2F2026/review
+Authorization: Bearer <JWT of ql01>
+Content-Type: application/json
+
+{"decision":"CHAP_NHAN","note":"Khách cung cấp tin nhắn xác nhận đơn hàng"}
+```
+Response `200`
+```json
+{
+  "ticketCode": "BH-000134/2026",
+  "customerName": "API Example Customer (edited)",
+  "phone": "0978291319",
+  "categoryName": "Màn hình",
+  "priority": "TRUNG_BINH",
+  "status": "MOI",
+  "receivedAt": "2026-11-13T20:58:11.925+07:00",
+  "dueAt": "2026-11-17T20:58:11.925+07:00",
+  "categoryCode": "MAN_HINH",
+  "warrantyResult": "CON_BAO_HANH",
+  "issueDesc": "Màn hình sọc ngang, khách không còn hoá đơn",
+  "centerCode": "TT-CT01",
+  "receivedBy": "Trần Thị Bình",
+  "device": {
+    "deviceId": 312,
+    "serialImei": "API-EX-78291319-B",
+    "modelName": "Mekong A3",
+    "purchaseDate": null,
+    "warrantyMonths": 12
+  },
+  "history": [
+    {
+      "changedAt": "2026-11-13T20:58:11.927+07:00",
+      "fromStatus": null,
+      "toStatus": "CHO_XAC_MINH",
+      "changedBy": "Trần Thị Bình",
+      "note": "Tạo phiếu – thiếu ngày mua"
+    },
+    {
+      "changedAt": "2026-11-13T20:58:11.940+07:00",
+      "fromStatus": "CHO_XAC_MINH",
+      "toStatus": "MOI",
+      "changedBy": "Đặng Văn Khoa",
+      "note": "Khách cung cấp tin nhắn xác nhận đơn hàng"
+    }
+  ]
+}
+```
+
+*Error*
+```http
+POST /api/tickets/BH-000134%2F2026/review
+Authorization: Bearer <JWT of ql01>
+Content-Type: application/json
+
+{"decision":"KHONG_CHAP_NHAN","note":"Xét lại"}
+```
+Response `409`
+```json
+{
+  "code": "ALREADY_REVIEWED",
+  "message": "Phiếu đã được xét duyệt – không ghi đè"
+}
+```
 <!-- /vd:review -->
