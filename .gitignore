@@ -5,3 +5,9 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+# Bài tập 3: không commit log, bản sao lưu CSDL, tệp dữ liệu lớn sinh ra khi chạy
+*.log
+*.dump
+*.backup
+*.sql.gz
+coverage/
