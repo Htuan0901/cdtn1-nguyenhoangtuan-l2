@@ -19,6 +19,20 @@ Sinh viên: Nguyễn Hoàng Tuấn – MSSV 2374802010542. Mẫu 7 dòng theo Bu
 | BUG-12 | Minor | `GET /api/tickets?q=a&q=b` (hoặc `q[x]=1`) trả 500 thay vì 400 | Buổi 14 – ST-08 | [e4632c0](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/e4632c08c45b0abf3bad5e49d344f6f269bc893c) | ST-08, TC-43, TC-44 |
 | BUG-13 | Minor | Body JSON lớn hơn 100 KB trả 500 thay vì 413 | Buổi 14 – ST-09 | [3674a17](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/3674a17ed0e32e8e4bcbb85b57fc66169d5a58c5) | ST-09, TC-45 |
 | BUG-14 | Major | Bộ test không chạy được trong container: `npm test` không thấy tệp test, `npm run st` đòi tệp `.env` | Buổi 15 – phép thử máy trắng bước 5 | [91b2894](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/91b2894fe1afe17f6c4680807d21012dd8d5e425) | TC-47…TC-49, CI job `dong-goi`, Deployment Guide §5 bước 5–9 |
+| BUG-15 | Critical | Một request có body nén gzip kèm byte thừa làm sập tiến trình API (lỗ hổng `body-parser` 1.20.8, CVE-2026-111181) | Buổi 16 – `npm audit` (checklist bảo mật mục 7) | [b057ae0](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/b057ae0) | `npm audit --omit=dev` → 0; CI bước `npm audit --audit-level=high` |
+
+---
+
+### BUG-15 · Critical – Một request nén có byte thừa làm sập tiến trình API (lỗ hổng thư viện body-parser)
+| Dòng | Nội dung |
+|---|---|
+| 1. Mã và mức độ | BUG-15 · **Critical** – lỗ hổng bảo mật làm **dừng hệ thống**. Chỉ một request, không cần đăng nhập (body được đọc trước khi xác thực và định tuyến), là đủ làm tiến trình Node.js của API thoát. Container `api` không có chính sách tự khởi động lại, nên mọi nhân viên mất dịch vụ tới khi có người khởi động lại bằng tay. Cảnh báo gốc: GHSA-27r3-jxmh-p828 / CVE-2026-111181, mức High, CVSS 7.5 (A:H) |
+| 2. Phát hiện bởi | Checklist bảo mật mục 7 (Buổi 15–16): chạy `npm audit --omit=dev` trong `src/backend` trước khi gắn tag `v1.0` |
+| 3. Triệu chứng | `npm audit --omit=dev` báo **`1 high severity vulnerability`**: `body-parser <1.20.9 – body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body`, `fix available via npm audit fix` (ảnh `sec-audit-truoc.png`). Cây phụ thuộc: express 4.22.3 → body-parser **1.20.8** |
+| 4. Cách tái lập | Trên commit trước bản vá: `cd src/backend` → `npm ci` → `npm audit --omit=dev`. Kết quả như dòng 3 (ảnh `sec-audit-truoc.png`). Em tái lập bằng công cụ kiểm phụ thuộc và **không** gửi request tấn công vào hệ thống; điều kiện khai thác lấy từ cảnh báo chính thức |
+| 5. Nguyên nhân | API đọc JSON bằng `express.json()`, tức `body-parser` với cấu hình mặc định `inflate: true`, nên chấp nhận body có `Content-Encoding: gzip/deflate`. Ở bản 1.20.8, body nén được đưa qua luồng giải nén mà **không gắn hàm bắt lỗi**. Nếu sau khung nén hợp lệ còn byte thừa, luồng giải nén phát lỗi, lỗi này trở thành *uncaught exception* và làm thoát cả tiến trình. Lỗi nằm trong thư viện bên thứ ba; mã của em không bắt được vì nó xảy ra ngoài chuỗi middleware. Lockfile ghim bản 1.20.8 từ trước khi cảnh báo được công bố |
+| 6. Cách sửa | `npm audit fix --omit=dev` nâng **body-parser 1.20.8 → 1.20.9** (bản vá, cùng nhánh 1.20.x mà express 4.22.3 cho phép). Chỉ `package-lock.json` đổi 3 dòng (version, resolved, integrity); không đổi mã nguồn và không đổi API. Không dùng `--force`, nên không nâng bản chính nào. Thêm bước CI `npm audit --omit=dev --audit-level=high`: nếu lỗ hổng mức High/Critical quay lại, CI đỏ |
+| 7. Commit và xác nhận | [b057ae0](https://github.com/Htuan0901/cdtn1-nguyenhoangtuan-l2/commit/b057ae0) · `npm ls body-parser` → `body-parser@1.20.9` · `npm audit --omit=dev` → **`found 0 vulnerabilities`** (ảnh `sec-audit.png`) · `npm test` 64/64 PASS sau khi nâng · bước CI `npm audit --omit=dev --audit-level=high` là test hồi quy: lệnh trả mã thoát khác 0 khi còn lỗ hổng từ mức High, nên lockfile cũ làm CI đỏ, lockfile mới làm CI xanh |
 
 ---
 
