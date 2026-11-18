@@ -61,6 +61,21 @@ jobs:
         if: failure()
         run: cat api.log || true
 
+  # Buổi 18 (DevSecOps): quét secret trên TOÀN BỘ lịch sử commit bằng gitleaks.
+  # Chạy song song với các job khác; có phát hiện mới (không nằm trong .gitleaksignore) thì CI đỏ.
+  # Lưu ý: gitleaks KHÔNG bắt được mật khẩu yếu trong chuỗi postgres://… (BUG-11) – phần đó do ST-11 / TC-46 trong npm test lo.
+  quet-secret:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # cần đủ lịch sử để quét mọi commit
+      - name: gitleaks – quét secret (giá trị bị che bằng --redact)
+        run: >-
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2
+          git /repo --redact -v --gitleaks-ignore-path /repo/.gitleaksignore
+
   # Bài tập 3 – PHÉP THỬ MÁY TRẮNG tự động: trên máy sạch của GitHub làm ĐÚNG Deployment Guide
   # (cp .env.example .env → docker compose up -d --build) rồi kiểm theo mục "Verify it works" và chạy MỌI bộ test TRONG container.
   dong-goi:

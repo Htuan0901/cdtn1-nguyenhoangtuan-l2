@@ -1,0 +1,4 @@
+# Cảnh báo gitleaks đã kiểm tra là CẢNH BÁO SAI (đọc lại từng dòng trước khi thêm vào đây).
+# system-test.js:208 – token GIẢ cố ý (alg "none", không có chữ ký) dùng trong ST-10 để kiểm API TỪ CHỐI token giả.
+# Không chứa bí mật nào: phần payload chỉ là { staffId: 1, role: "QL_TRUNG_TAM", centerCode: "TT-CT01" }.
+8c1e228b2e88d335376a44d1c87dbedb1321ddd5:src/backend/scripts/system-test.js:jwt:208
